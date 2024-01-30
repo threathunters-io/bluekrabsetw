@@ -212,6 +212,7 @@
     <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventTraceProperties.hpp" />
     <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\AnsiString.hpp" />
     <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\CountedString.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\DirectEventFilter.hpp" />
     <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\EventFilter.hpp" />
     <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\Fluent.hpp" />
     <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\Predicate.hpp" />

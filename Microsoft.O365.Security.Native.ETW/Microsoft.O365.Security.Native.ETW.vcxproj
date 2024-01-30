@@ -207,6 +207,7 @@
     <ClInclude Include="EventTraceProperties.hpp" />
     <ClInclude Include="Filtering\AnsiString.hpp" />
     <ClInclude Include="Filtering\CountedString.hpp" />
+    <ClInclude Include="Filtering\DirectEventFilter.hpp" />
     <ClInclude Include="Filtering\EventFilter.hpp" />
     <ClInclude Include="Filtering\Fluent.hpp" />
     <ClInclude Include="Filtering\Predicate.hpp" />
