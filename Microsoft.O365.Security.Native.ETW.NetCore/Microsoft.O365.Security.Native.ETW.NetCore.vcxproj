@@ -29,7 +29,7 @@
     <RestorePackages>true</RestorePackages>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-    <ReadOnlyProject>true</ReadOnlyProject>
+    <ReadOnlyProject>false</ReadOnlyProject>
     <ReplaceWildcardsInProjectItems>true</ReplaceWildcardsInProjectItems>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(TargetFramework)\</OutDir>
   </PropertyGroup>
@@ -38,8 +38,8 @@
 	warning MSB3101: Could not write state file "x64\ReleaseSigning\net6.0\Microsoft.O365.Security.Native.ETW.NetCore.vcxproj.AssemblyReference.cache".
 	Could not find a part of the path [...]
   -->
-  <Target Name="CreateDirectories" BeforeTargets="PrepareForBuild" >
-      <MakeDir Directories="$(Platform)\$(Configuration)\$(TargetFramework)\"/>
+  <Target Name="CreateDirectories" BeforeTargets="PrepareForBuild">
+    <MakeDir Directories="$(Platform)\$(Configuration)\$(TargetFramework)\" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -103,7 +103,8 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\krabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -127,7 +128,8 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\krabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -159,7 +161,8 @@
       <PreprocessorDefinitions>NDEBUG;UNICODE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\krabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -180,7 +183,8 @@
       <PreprocessorDefinitions>NDEBUG;UNICODE;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\krabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -196,10 +200,40 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Microsoft.O365.Security.Native.ETW\*.cpp" />
+    <ClCompile Include="..\Microsoft.O365.Security.Native.ETW\AssemblyInfo.cpp" />
+    <ClCompile Include="..\Microsoft.O365.Security.Native.ETW\ETWLib.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\**\*.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Conversions.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Errors.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventRecord.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventRecordError.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventRecordMetadata.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventTraceProperties.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\AnsiString.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\CountedString.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\EventFilter.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\Fluent.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\Predicate.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\UnicodeString.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Guid.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\IEventRecord.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\IEventRecordError.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\IEventRecordMetadata.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\ITrace.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\KernelProvider.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\KernelTrace.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Kernel\KernelProviders.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\NativePtr.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Property.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Provider.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\RawProvider.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\EventHeader.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\Proxy.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\RecordBuilder.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\SynthRecord.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\TraceStats.hpp" />
+    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\UserTrace.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
