@@ -13,7 +13,7 @@ void user_trace_008_stacktrace::start()
     krabs::user_trace trace(L"user_trace_008_stacktrace");
     krabs::provider<> process_provider(L"Microsoft-Windows-Kernel-Process");
     process_provider.any(0x10);  // WINEVENT_KEYWORD_PROCESS
-    process_provider.trace_flags(process_provider.trace_flags() | EVENT_ENABLE_PROPERTY_STACK_TRACE);
+    process_provider.enable_property(process_provider.enable_property() | EVENT_ENABLE_PROPERTY_STACK_TRACE);
 
     krabs::event_filter process_filter(krabs::predicates::id_is(1));  // ProcessStart
     process_filter.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {

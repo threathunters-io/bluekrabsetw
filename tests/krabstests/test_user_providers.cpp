@@ -119,8 +119,8 @@ namespace krabstests
             const ULONG FLAGS = 0xFFFFFFFF;
 
             krabs::provider<> foo(krabs::guid::random_guid());
-            foo.trace_flags(FLAGS);
-            Assert::IsTrue(foo.trace_flags() == FLAGS);
+            foo.enable_property(FLAGS);
+            Assert::IsTrue(foo.enable_property() == FLAGS);
         }
     };
 }

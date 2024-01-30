@@ -55,6 +55,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "filtering", "filtering", "{96FA58B5-A1F6-4107-9FB4-226290F9D696}"
 	ProjectSection(SolutionItems) = preProject
 		krabs\filtering\comparers.hpp = krabs\filtering\comparers.hpp
+		krabs\filtering\direct_event_filter.hpp = krabs\filtering\direct_event_filter.hpp
 		krabs\filtering\event_filter.hpp = krabs\filtering\event_filter.hpp
 		krabs\filtering\predicates.hpp = krabs\filtering\predicates.hpp
 		krabs\filtering\view_adapters.hpp = krabs\filtering\view_adapters.hpp

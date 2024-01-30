@@ -10,6 +10,7 @@
 
 #include "compiler_check.hpp"
 #include "filtering/event_filter.hpp"
+#include "filtering/direct_event_filter.hpp"
 #include "perfinfo_groupmask.hpp"
 #include "trace_context.hpp"
 #include "wstring_convert.hpp"
@@ -112,6 +113,7 @@ namespace krabs {
              */
             void add_filter(const event_filter &f);
 
+            void add_filter(const direct_event_filters& f);
         protected:
 
             /**
@@ -125,6 +127,7 @@ namespace krabs {
             std::deque<provider_callback> callbacks_;
             std::deque<provider_error_callback> error_callbacks_;
             std::deque<event_filter> filters_;
+            std::deque<direct_event_filters> direct_filters_;
 
         private:
             template <typename T>
@@ -236,27 +239,27 @@ namespace krabs {
         * <example>
         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
         *    provider<> powershell(id);
-        *    powershell.trace_flags(EVENT_ENABLE_PROPERTY_STACK_TRACE);
+        *    powershell.enable_property(EVENT_ENABLE_PROPERTY_STACK_TRACE);
         * </example>
         */
-        void trace_flags(T trace_flags);
+        void enable_property(T enable_property);
 
         /**
         * <summary>
         * Gets the configured value for the "EnableProperty" flag on the 
-        * ENABLE_TRACE_PARAMETER struct. See void trace_flags(T trace_flags)
+        * ENABLE_TRACE_PARAMETER struct. See void enable_property(T enable_property)
         * for details on what the values mean.
         * </summary>
         * <returns>The value to set when the provider is enabled.</returns>
         * <example>
         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
         *    provider<> powershell(id);
-        *    powershell.trace_flags(EVENT_ENABLE_PROPERTY_STACK_TRACE);
-        *    auto flags = powershell.get_trace_flags(); 
+        *    powershell.enable_property(EVENT_ENABLE_PROPERTY_STACK_TRACE);
+        *    auto flags = powershell.enable_property(); 
         *    assert(flags == EVENT_ENABLE_PROPERTY_STACK_TRACE);
         * </example>
         */
-        T trace_flags() const;
+        T enable_property() const;
 
         /**
         * <summary>
@@ -291,7 +294,7 @@ namespace krabs {
         T any_;
         T all_;
         T level_;
-        T trace_flags_;
+        T enable_property_;
         bool rundown_enabled_;
 
     private:
@@ -482,6 +485,12 @@ namespace krabs {
         }
 
         template <typename T>
+        void base_provider<T>::add_filter(const direct_event_filters& f)
+        {
+            direct_filters_.push_back(f);
+        }
+
+        template <typename T>
         void base_provider<T>::on_event(const EVENT_RECORD &record, const krabs::trace_context &trace_context) const
         {
             try
@@ -513,7 +522,7 @@ namespace krabs {
     , any_(0)
     , all_(0)
     , level_(5)
-    , trace_flags_(0)
+    , enable_property_(0)
     , rundown_enabled_(false)
     {}
 
@@ -602,7 +611,7 @@ namespace krabs {
             any_ = 0;
             all_ = 0;
             level_ = 5;
-            trace_flags_ = 0;
+            enable_property_ = 0;
             rundown_enabled_ = false;
         }
 
@@ -628,15 +637,15 @@ namespace krabs {
     }
 
     template <typename T>
-    void provider<T>::trace_flags(T trace_flags)
+    void provider<T>::enable_property(T enable_property)
     {
-        trace_flags_ = trace_flags;
+        enable_property_ = enable_property;
     }
 
     template <typename T>
-    T provider<T>::trace_flags() const
+    T provider<T>::enable_property() const
     {
-        return static_cast<T>(trace_flags_);
+        return static_cast<T>(enable_property_);
     }
 
     template <typename T>
@@ -652,7 +661,7 @@ namespace krabs {
         tmp.any_            = static_cast<ULONGLONG>(any_);
         tmp.all_            = static_cast<ULONGLONG>(all_);
         tmp.level_          = static_cast<UCHAR>(level_);
-        tmp.trace_flags_    = static_cast<ULONG>(trace_flags_);
+        tmp.enable_property_ = static_cast<ULONG>(enable_property_);
         tmp.callbacks_      = this.callbacks_;
 
         return tmp;

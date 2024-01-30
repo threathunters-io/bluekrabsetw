@@ -168,6 +168,7 @@
     <ClCompile Include="user_trace_007_rundown.cpp" />
     <ClCompile Include="user_trace_008_stacktrace.cpp" />
     <ClCompile Include="user_trace_009_from_file.cpp" />
+    <ClCompile Include="user_trace_010_direct_filter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="examples.h" />

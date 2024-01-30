@@ -98,11 +98,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// </summary>
         property TraceFlags TraceFlags {
             ETW::TraceFlags get() {
-                return static_cast<ETW::TraceFlags>(provider_->trace_flags());
+                return static_cast<ETW::TraceFlags>(provider_->enable_property());
             }
 
             void set(O365::Security::ETW::TraceFlags value) {
-                provider_->trace_flags((ULONG)value);
+                provider_->enable_property((ULONG)value);
             }
         }
 

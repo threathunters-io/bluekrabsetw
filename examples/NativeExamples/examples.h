@@ -77,3 +77,9 @@ struct user_trace_009_from_file
 {
     static void start();
 };
+
+struct user_trace_010_direct_filter
+{
+    static void start();
+};
+
