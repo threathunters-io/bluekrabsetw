@@ -45,7 +45,7 @@ namespace krabs { namespace details {
             std::vector<BYTE> event_name_buffer;
         };
         //ENABLE_TRACE_PARAMETERS
-        struct enable_trace_parameters {
+        struct provider_enable_info {
             ENABLE_TRACE_PARAMETERS parameters;
             event_filter_buffers event_buffer;
             std::vector<filter_flags> filter_flags_;
@@ -56,7 +56,7 @@ namespace krabs { namespace details {
             ULONG enable_property_;
         };
 
-        typedef std::map<krabs::guid, enable_trace_parameters> trace_parameters_container;
+        typedef std::map<krabs::guid, provider_enable_info> provider_enable_info_container;
 
         
 
@@ -103,7 +103,7 @@ namespace krabs { namespace details {
          *   todo.
          * </summary>
          */
-        static void populate_provider_enable_info(const ut::provider_type& provider, ut::enable_trace_parameters& info);
+        static void populate_provider_enable_info(const ut::provider_type& provider, ut::provider_enable_info& info);
 
         /**
          * <summary>
@@ -182,7 +182,7 @@ namespace krabs { namespace details {
 
     }
 
-    inline void ut::populate_provider_enable_info(const ut::provider_type& provider, ut::enable_trace_parameters& info)
+    inline void ut::populate_provider_enable_info(const ut::provider_type& provider, ut::provider_enable_info& info)
     {
         //enable_trace_parameters info = {};
         EVENT_FILTER_DESCRIPTOR filterDesc[15] = { 0 };
@@ -291,275 +291,26 @@ namespace krabs { namespace details {
         if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE)
             return;
 
-        trace_parameters_container provider_parameters_container;
-        trace_parameters_container provider_parameters_container2;
+        provider_enable_info_container providers_enable_info;
         // This function essentially takes the union of all the provider flags
         // for a given provider GUID. This comes about when multiple providers
         // for the same GUID are provided and request different provider flags.
         // TODO: Only forward the calls that are requested to each provider.
         for (auto& provider : trace.providers_) {
             //auto& a = provider.get();
-            auto& trace_parameters = provider_parameters_container[provider.get().guid_];
-            auto& trace_parameters2 = provider_parameters_container2[provider.get().guid_];
-            
-            populate_provider_enable_info(provider, trace_parameters2);
+            auto& enable_info = providers_enable_info[provider.get().guid_];
+            populate_provider_enable_info(provider, enable_info);
             
             ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                &trace_parameters2.parameters.SourceId,
+                &enable_info.parameters.SourceId,
                 EVENT_CONTROL_CODE_ENABLE_PROVIDER,
-                trace_parameters2.level_,
-                trace_parameters2.any_,
-                trace_parameters2.all_,
+                enable_info.level_,
+                enable_info.any_,
+                enable_info.all_,
                 0,
-                &trace_parameters2.parameters);
+                &enable_info.parameters);
 
-            error_check_common_conditions(status);
-
-            trace_parameters.level_ |= provider.get().level_;
-            trace_parameters.any_ |= provider.get().any_;
-            trace_parameters.all_ |= provider.get().all_;
-            trace_parameters.enable_property_ |= provider.get().enable_property_;
-            trace_parameters.rundown_enabled_ |= provider.get().rundown_enabled_;
-
-            for (const auto& direct_filters : provider.get().direct_filters_) {
-                for (const auto& direct_filter : direct_filters.list_) {
-                    switch (direct_filter->get_type()) {
-                    case EVENT_FILTER_TYPE_SYSTEM_FLAGS: {
-
-                        filter_flags _filter_flags;
-                        auto noneTypeFilter = dynamic_cast<system_flags_event_filter*>(direct_filter.get());
-                        _filter_flags.custom_value_ = noneTypeFilter->get_value();
-                        _filter_flags.filter_type_ = EVENT_FILTER_TYPE_SYSTEM_FLAGS;
-                        _filter_flags.custom_size_ = noneTypeFilter->get_size();
-                        trace_parameters.filter_flags_.push_back(_filter_flags);
-                        break;
-                    }
-                    case EVENT_FILTER_TYPE_EVENT_ID: {
-                        auto idTypeFilter = dynamic_cast<event_id_event_filter*>(direct_filter.get());
-                        filter_flags _filter_flags;
-
-                        _filter_flags.event_ids_.insert(
-                            idTypeFilter->get_data().begin(),
-                            idTypeFilter->get_data().end());
-                        _filter_flags.filter_type_ = EVENT_FILTER_TYPE_EVENT_ID;
-                        auto filterEventIdCount = _filter_flags.event_ids_.size();
-                        _filter_flags.custom_size_ = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[filterEventIdCount]);
-                        trace_parameters.filter_flags_.push_back(_filter_flags);
-                        break;
-                    }
-                    case EVENT_FILTER_TYPE_EVENT_NAME: {
-                        auto nameTypeFilter = dynamic_cast<event_name_event_filter*>(direct_filter.get());
-                        filter_flags _filter_flags;
-                        _filter_flags.event_names_.insert(
-                            nameTypeFilter->get_data().begin(),
-                            nameTypeFilter->get_data().end());
-                        _filter_flags.filter_type_ = EVENT_FILTER_TYPE_EVENT_NAME;
-                        //auto filterNameCount = _filter_flags.event_names_.size();
-                        auto index = 0;
-                        for (auto filter : _filter_flags.event_names_) {
-                            // The Names field should be a series of NameCount nul - terminated utf - 8
-                            // event names.
-                            index += (int)filter.size() + 1;
-                        }
-                        _filter_flags.custom_size_ = FIELD_OFFSET(EVENT_FILTER_EVENT_NAME, Names[index]);
-                        trace_parameters.filter_flags_.push_back(_filter_flags);
-
-
-
-
-
-
-                        break;
-                    }
-                    case EVENT_FILTER_TYPE_PAYLOAD: {
-                        auto nameTypeFilter = dynamic_cast<event_payload_event_filter*>(direct_filter.get());
-                        filter_flags _filter_flags;
-                        _filter_flags.field_name_ = nameTypeFilter->get_field_name();
-                        _filter_flags.value_ = nameTypeFilter->get_value();
-                        _filter_flags.compare_op_ = nameTypeFilter->get_compare_op();
-                        _filter_flags.filter_type_ = EVENT_FILTER_TYPE_PAYLOAD;
-                        trace_parameters.filter_flags_.push_back(_filter_flags);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                    }
-                }
-            }
-        }
-
-        for (auto& [guid, trace_parameters] : provider_parameters_container) {
-            ENABLE_TRACE_PARAMETERS parameters;
-            parameters.ControlFlags = 0;
-            parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
-            parameters.SourceId = guid;
-
-            GUID _guid = guid;
-            auto& _trace_parameters = trace_parameters;
-
-            parameters.EnableProperty = _trace_parameters.enable_property_;
-            parameters.EnableFilterDesc = nullptr;
-            parameters.FilterDescCount = 0;
-            EVENT_FILTER_DESCRIPTOR filterDesc[15] = { 0 };
-            //PAYLOAD_FILTER_PREDICATE predicates[1];
-            std::vector<BYTE> filterEventIdBuffer;
-            std::vector<BYTE> filterNameBuffer;
-            for (auto& filter_flags : _trace_parameters.filter_flags_) {
-                auto& _filterDesc = filterDesc[parameters.FilterDescCount];
-                switch (filter_flags.filter_type_) {
-                case EVENT_FILTER_TYPE_SYSTEM_FLAGS: {
-                    _filterDesc.Ptr = reinterpret_cast<ULONGLONG>(&filter_flags.custom_value_);
-                    _filterDesc.Size = filter_flags.custom_size_;
-                    _filterDesc.Type = 0;
-                    parameters.FilterDescCount++;
-                    break;
-                }
-                case EVENT_FILTER_TYPE_EVENT_ID: {
-
-                    auto filterEventIdCount = filter_flags.event_ids_.size();
-
-                    if (filterEventIdCount > 0) {
-                        _filterDesc.Type = EVENT_FILTER_TYPE_EVENT_ID;
-                        filterEventIdBuffer.resize(filter_flags.custom_size_, 0);
-                        auto filterEventIds = reinterpret_cast<PEVENT_FILTER_EVENT_ID>(&(filterEventIdBuffer[0]));
-                        filterEventIds->FilterIn = TRUE;
-                        filterEventIds->Count = static_cast<USHORT>(filterEventIdCount);
-
-                        auto index = 0;
-                        for (auto filter : filter_flags.event_ids_) {
-                            filterEventIds->Events[index] = filter;
-                            index++;
-                        }
-
-                        _filterDesc.Ptr = reinterpret_cast<ULONGLONG>(filterEventIds);
-                        _filterDesc.Size = filter_flags.custom_size_;
-                    }
-                    parameters.FilterDescCount++;
-                    break;
-                }
-                case EVENT_FILTER_TYPE_EVENT_NAME: {
-                    /*typedef struct _EVENT_FILTER_EVENT_NAME {
-                        ULONGLONG MatchAnyKeyword;
-                        ULONGLONG MatchAllKeyword;
-                        UCHAR     Level;
-                        BOOLEAN   FilterIn;
-                        USHORT    NameCount;
-                        UCHAR     Names[ANYSIZE_ARRAY];
-                    } EVENT_FILTER_EVENT_NAME, * PEVENT_FILTER_EVENT_NAME;*/
-                    auto filterNamesCount = filter_flags.event_names_.size();
-                    if (filterNamesCount > 0) {
-                        _filterDesc.Type = EVENT_FILTER_TYPE_EVENT_NAME;
-                        filterNameBuffer.resize(filter_flags.custom_size_, 0);
-                        auto filterEventNames = reinterpret_cast<PEVENT_FILTER_EVENT_NAME>(&(filterNameBuffer[0]));
-                        filterEventNames->FilterIn = TRUE;
-                        filterEventNames->Level = _trace_parameters.level_;
-                        filterEventNames->MatchAnyKeyword = _trace_parameters.any_;
-                        filterEventNames->MatchAllKeyword = _trace_parameters.all_;
-                        auto index = 0;
-                        for (auto filter : filter_flags.event_names_) {
-                            // The Names field should be a series of NameCount nul - terminated utf - 8
-                            // event names.
-                            std::vector<unsigned char> buff(filter.size() + 1); // initializes to all 0's.
-                            std::copy(filter.begin(), filter.end(), buff.begin());
-                            for (auto& s : buff) {
-                                filterEventNames->Names[index] = s;
-                                index++;
-                            }
-                            filterEventNames->NameCount = static_cast<USHORT>(filterNamesCount);
-                        }
-                        _filterDesc.Ptr = reinterpret_cast<ULONGLONG>(filterEventNames);
-                        _filterDesc.Size = filter_flags.custom_size_;
-                    }
-                    parameters.FilterDescCount++;
-
-                    break;
-                }
-                case EVENT_FILTER_TYPE_PAYLOAD: {
-                    /*
-                    typedef struct _PAYLOAD_FILTER_PREDICATE {
-                      LPWSTR FieldName;
-                      USHORT CompareOp;
-                      LPWSTR Value;
-                    } PAYLOAD_FILTER_PREDICATE, *PPAYLOAD_FILTER_PREDICATE;
-                    */
-                    
-                    //std::wstring mans{L"C:\\data\\microsoft-windows-system-events.dll"};
-                    ////std::wstring mans{ L"C:\\data\\services.exe" };
-                    //
-                    //
-
-                    //ULONG Status = TdhLoadManifestFromBinary((PWSTR)mans.c_str());
-                    ////ULONG Status = TdhLoadManifest((PWSTR)mans.c_str());
-                    //if (Status != ERROR_SUCCESS) {
-                    //    printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
-                    //    //goto Exit;
-                    //}
-
-                    ////event_payload_event_filter > (L"DesiredAccess", (unsigned short)PAYLOADFIELD_EQ, L"0");
-
-                    //predicates->CompareOp = filter_flags.compare_op_;
-                    //predicates->FieldName = (LPWSTR)filter_flags.field_name_.c_str();
-                    //predicates->Value = (LPWSTR)filter_flags.value_.c_str();
-                    //
-                    //EVENT_DESCRIPTOR ed = { 0 };
-                    //ed.Id = 5;
-                
-                    ////EVENT_DESCRIPTOR Example_Event_2 = { 0xd100, 0x0, 0x0, 0x5, 0x0, 0x0, 0x0 };
-                    //PVOID EventFilters[2] = { 0 };
-                    //ULONG FilterCount = 0;
-                    ////TdhCreatePayloadFilter();
-                    //Status = TdhCreatePayloadFilter(
-                    //    &_guid,
-                    //    &ed,
-                    //    TRUE,      // TRUE Match any predicates (OR); FALSE Match all predicates (AND)
-                    //    1,
-                    //    predicates,
-                    //    &EventFilters[FilterCount++]);
-                    //if (Status != ERROR_SUCCESS) {
-                    //    printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
-                    //    //goto Exit;
-                    //}
-
-                    //Status = TdhAggregatePayloadFilters(
-                    //    FilterCount,
-                    //    EventFilters,
-                    //    NULL,
-                    //    &_filterDesc);
-                    //if (Status != ERROR_SUCCESS) {
-                    //    printf("TdhAggregatePayloadFilters() failed with %lu\n", Status);
-                    //   
-                    //}
-
-
-                    //parameters.FilterDescCount++;
-                    break;
-                }
-
-
-                default: {
-                    break;
-                }
-                }
-            }
-
-            parameters.EnableFilterDesc = &filterDesc[0];
-
-            /*ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                &_guid,
-                EVENT_CONTROL_CODE_ENABLE_PROVIDER,
-                _trace_parameters.level_,
-                _trace_parameters.any_,
-                _trace_parameters.all_,
-                0,
-                &parameters);*/
-
-           
-
-            
-
-
-            //error_check_common_conditions(status);
+            error_check_common_conditions(status);           
         }
     }
 
