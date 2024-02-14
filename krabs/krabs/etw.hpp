@@ -17,6 +17,9 @@
 #include <evntrace.h>
 #include <evntcons.h>
 
+#include "version_helpers.hpp"
+#include "kernel_guids.hpp"
+
 namespace krabs { namespace details {
 
     // The ETW API requires that we reserve enough memory behind
@@ -27,6 +30,18 @@ namespace krabs { namespace details {
     class trace_info {
     public:
         EVENT_TRACE_PROPERTIES properties;
+        wchar_t traceName[MAX_PATH];
+        wchar_t logfileName[MAX_PATH];
+    };
+
+    // The ETW API requires that we reserve enough memory behind
+    // an EVENT_TRACE_PROPERTIES_V2 buffer in order to store an ETW trace name
+    // and an optional ETW log file name. The easiest way to do this is to
+    // use a struct to reserve this space -- the alternative is to malloc
+    // the bytes at runtime (ew).
+    class trace_info_v2 {
+    public:
+        EVENT_TRACE_PROPERTIES_V2 properties;
         wchar_t traceName[MAX_PATH];
         wchar_t logfileName[MAX_PATH];
     };
@@ -79,6 +94,13 @@ namespace krabs { namespace details {
 
         /**
          * <summary>
+         * Queries the ETW trace identified by the info in the trace type v2.
+         * </summary>
+         */
+        EVENT_TRACE_PROPERTIES_V2 query_v2();
+
+        /**
+         * <summary>
          * Configures the ETW trace session settings.
          * See https://docs.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-tracesetinformation.
          * </summary>
@@ -104,10 +126,12 @@ namespace krabs { namespace details {
 
     private:
         trace_info fill_trace_info();
+        trace_info_v2 fill_trace_info_v2();
         EVENT_TRACE_LOGFILE fill_logfile();
         void close_trace();
         void register_trace();
         EVENT_TRACE_PROPERTIES query_trace();
+        EVENT_TRACE_PROPERTIES_V2 query_trace_v2();
         void stop_trace();
         EVENT_TRACE_LOGFILE open_trace();
         void process_trace();
@@ -197,6 +221,12 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
+    EVENT_TRACE_PROPERTIES_V2 trace_manager<T>::query_v2()
+    {
+        return query_trace();
+    }
+
+    template <typename T>
     void trace_manager<T>::set_trace_information(
         TRACE_INFO_CLASS information_class,
         PVOID trace_information,
@@ -259,6 +289,34 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
+    trace_info_v2 trace_manager<T>::fill_trace_info_v2()
+    {
+        trace_info_v2 info = {};
+        info.properties.Wnode.BufferSize = sizeof(trace_info_v2);
+        info.properties.Wnode.Guid = T::trace_type::get_trace_guid();
+        info.properties.Wnode.Flags = WNODE_FLAG_TRACED_GUID;
+        info.properties.Wnode.ClientContext = 1; // QPC clock resolution
+        info.properties.BufferSize = trace_.properties_.BufferSize;
+        info.properties.MinimumBuffers = trace_.properties_.MinimumBuffers;
+        info.properties.MaximumBuffers = trace_.properties_.MaximumBuffers;
+        info.properties.FlushTimer = trace_.properties_.FlushTimer;
+
+        if (trace_.properties_.LogFileMode)
+            info.properties.LogFileMode = trace_.properties_.LogFileMode;
+        else
+            info.properties.LogFileMode = EVENT_TRACE_REAL_TIME_MODE
+            | EVENT_TRACE_NO_PER_PROCESSOR_BUFFERING;
+
+        info.properties.LogFileMode |= T::trace_type::augment_file_mode();
+        info.properties.LoggerNameOffset = offsetof(trace_info_v2, logfileName);
+        info.properties.EnableFlags = T::trace_type::construct_enable_flags(trace_);
+        assert(info.traceName[0] == '\0');
+        assert(info.logfileName[0] == '\0');
+        trace_.name_._Copy_s(info.traceName, ARRAYSIZE(info.traceName), trace_.name_.length());
+        return info;
+    }
+
+    template <typename T>
     EVENT_TRACE_LOGFILE trace_manager<T>::fill_logfile()
     {
         EVENT_TRACE_LOGFILE file = {};
@@ -299,9 +357,38 @@ namespace krabs { namespace details {
     EVENT_TRACE_PROPERTIES trace_manager<T>::query_trace()
     {
         trace_info info = fill_trace_info();
+
+        ULONG status = ControlTrace(
+                NULL,
+                trace_.name_.c_str(),
+                //info,
+                &info.properties,
+            EVENT_TRACE_CONTROL_QUERY);
+
+        if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
+            error_check_common_conditions(status);
+
+            return info.properties;
+        }
+
+        return { };
+    }
+
+    template <typename T>
+    EVENT_TRACE_PROPERTIES_V2 trace_manager<T>::query_trace_v2()
+    {
+        if (IsWindowsVersionOrGreater(10, 0, 15063)) {
+            error_check_common_conditions(ERROR_NOT_SUPPORTED);
+
+            return { };
+        }
+
+        trace_info_v2 info = fill_trace_info_v2();
+
         ULONG status = ControlTrace(
             NULL,
             trace_.name_.c_str(),
+            //info,
             &info.properties,
             EVENT_TRACE_CONTROL_QUERY);
 
@@ -316,18 +403,38 @@ namespace krabs { namespace details {
 
     template <typename T>
     void trace_manager<T>::register_trace()
-    {
-        trace_info info = fill_trace_info();
+    {   
+        PEVENT_TRACE_PROPERTIES info;
+        trace_info info_v1;
+        trace_info_v2 info_v2;
+        // Starting with Windows 10, version 1703: For better performance in
+        // cross process scenarios, you can now pass filtering information
+        // to ControlTrace for system wide private loggers. You will need
+        // to use the EVENT_TRACE_PROPERTIES_V2 structure to include
+        // filtering information.
+        // 
+        // TRUE if the specified version matches, or is greater than, the 
+        // version of the current Windows OS; otherwise, FALSE.
+        // Major version 10, minor version 0, and build number 15063, 
+        // which corresponds to Windows 10, version 1703.
+        if (IsWindowsVersionOrGreater(10, 0, 15063)) {
+            info_v1 = fill_trace_info();
+            info = reinterpret_cast<EVENT_TRACE_PROPERTIES*>(&info_v1.properties);
+        }
+        else {
+            info_v2 = fill_trace_info_v2();
+            info = reinterpret_cast<EVENT_TRACE_PROPERTIES*>(&info_v2.properties);           
+        }
 
         ULONG status = StartTrace(&trace_.registrationHandle_,
                                   trace_.name_.c_str(),
-                                  &info.properties);
+                                  info);
         if (status == ERROR_ALREADY_EXISTS) {
             try {
                 stop_trace();
                 status = StartTrace(&trace_.registrationHandle_,
                     trace_.name_.c_str(),
-                    &info.properties);
+                    info);
             }
             catch (need_to_be_admin_failure) {
                 (void)open_trace();

@@ -154,4 +154,52 @@ namespace krabs {
         unsigned int type_;
         unsigned long size_;
     };
+
+
+    /*
+    typedef struct _PAYLOAD_FILTER_PREDICATE {
+      LPWSTR FieldName;
+      USHORT CompareOp;
+      LPWSTR Value;
+    } PAYLOAD_FILTER_PREDICATE, *PPAYLOAD_FILTER_PREDICATE;
+    */
+    struct event_payload_event_filter : direct_event_filter_base {
+        event_payload_event_filter(const std::wstring& field_name, unsigned short compare_op, const std::wstring& value)
+            : field_name_(field_name),
+            compare_op_(compare_op),
+            type_(EVENT_FILTER_TYPE_PAYLOAD),
+            value_(value),
+            size_(0)
+        {}
+
+        unsigned const int get_type() const override {
+            return type_;
+        }
+
+        unsigned long const get_size() const override {
+            return size_;
+        }
+
+        const std::wstring& get_field_name() const
+        {
+            return field_name_;
+        }
+
+        const std::wstring& get_value() const
+        {
+            return value_;
+        }
+
+        const unsigned short& get_compare_op() const
+        {
+            return compare_op_;
+        }
+
+    private:
+        std::wstring field_name_;
+        unsigned short compare_op_;
+        std::wstring value_;
+        unsigned int type_;
+        unsigned long size_;
+    };
 } /* namespace krabs */

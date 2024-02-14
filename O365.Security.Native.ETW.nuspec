@@ -1,36 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
-        <id>Microsoft.O365.Security.Native.ETW</id>
-        <version>4.3.2</version>
-        <title>Microsoft.O365.Security.Native.ETW - managed wrappers for krabsetw</title>
-        <authors>Microsoft</authors>
-        <owners>Microsoft</owners>
+        <id>BlueKrabsetw.Native.ETW</id>
+        <version>4.3.3</version>
+        <title>BlueKrabsetw.Native.ETW - managed wrappers for krabsetw</title>
+        <authors>non</authors>
+        <owners>non</owners>
         <license type="expression">MIT</license>
-        <projectUrl>https://github.com/Microsoft/krabsetw</projectUrl>
+        <projectUrl>https://github.com/threathunters-io/bluekrabsetw</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>Microsoft.O365.Security.Native.ETW is a managed wrapper around the krabsetw ETW library.</description>
-        <summary>Microsoft.O365.Security.Native.ETW is a managed wrapper around the krabsetw ETW library.</summary>
+        <description>BlueKrabsetw.Native.ETW is a managed wrapper around the krabsetw ETW library.</description>
+        <summary>BlueKrabsetw.Native.ETW is a managed wrapper around the krabsetw ETW library.</summary>
         <releaseNotes>
-            Version 4.3.2:
+            Version 4.3.3:
               - Add support for ETL file sources
         </releaseNotes>
-        <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+        <copyright>non</copyright>
         <language />
         <tags>ETW krabs managed cppcli</tags>
         <dependencies>
-            <group targetFramework=".NETFramework4.6.2" />
+            <group targetFramework=".NETFramework4.8.1" />
             <group targetFramework="net6.0" />
         </dependencies>
     </metadata>
 
     <files>
-        <file src="krabs\x64\ReleaseSigning\net462\Microsoft.O365.Security.Native.ETW.dll" target="lib\net462\Microsoft.O365.Security.Native.ETW.dll" />
-        <file src="krabs\x64\ReleaseSigning\net462\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net462\Microsoft.O365.Security.Native.ETW.pdb" />
-        <file src="krabs\x64\ReleaseSigning\net462\Microsoft.O365.Security.Native.ETW.xml" target="lib\net462\Microsoft.O365.Security.Native.ETW.xml" />
-        <file src="krabs\x64\ReleaseSigning\net6.0\Microsoft.O365.Security.Native.ETW.dll" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.dll" />
-        <file src="krabs\x64\ReleaseSigning\net6.0\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.pdb" />
-        <file src="krabs\x64\ReleaseSigning\net6.0\Microsoft.O365.Security.Native.ETW.xml" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.xml" />
-        <file src="krabs\x64\ReleaseSigning\net6.0\Ijwhost.dll" target="runtimes\win-x64\native\Ijwhost.dll" />
+        <file src="krabs\x64\Release\net481\Microsoft.O365.Security.Native.ETW.dll" target="lib\net481\Microsoft.O365.Security.Native.ETW.dll" />
+        <file src="krabs\x64\Release\net481\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net481\Microsoft.O365.Security.Native.ETW.pdb" />
+        <file src="krabs\x64\Release\net481\Microsoft.O365.Security.Native.ETW.xml" target="lib\net481\Microsoft.O365.Security.Native.ETW.xml" />
+        <file src="krabs\x64\Release\net6.0\Microsoft.O365.Security.Native.ETW.dll" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.dll" />
+        <file src="krabs\x64\Release\net6.0\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.pdb" />
+        <file src="krabs\x64\Release\net6.0\Microsoft.O365.Security.Native.ETW.xml" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.xml" />
+        <file src="krabs\x64\Release\net6.0\Ijwhost.dll" target="runtimes\win-x64\native\Ijwhost.dll" />
     </files>
 </package>

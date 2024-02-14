@@ -28,7 +28,7 @@
     <RestorePackages>true</RestorePackages>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\net462\</OutDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\net481\</OutDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

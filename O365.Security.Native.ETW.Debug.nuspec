@@ -7,7 +7,7 @@
         <authors>Microsoft</authors>
         <owners>Microsoft</owners>
         <license type="expression">MIT</license>
-        <projectUrl>https://github.com/Microsoft/krabsetw</projectUrl>
+        <projectUrl>https://github.com/threathunters-io/bluekrabsetw</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>Microsoft.O365.Security.Native.ETW Debug is a managed wrapper around the krabsetw ETW library. This is the Debug build.</description>
         <summary>Microsoft.O365.Security.Native.ETW Debug is a managed wrapper around the krabsetw ETW library. This is the Debug build.</summary>
@@ -19,15 +19,15 @@
         <language />
         <tags>ETW krabs managed cppcli</tags>
         <dependencies>
-            <group targetFramework=".NETFramework4.6.2" />
+            <group targetFramework=".NETFramework4.8.1" />
             <group targetFramework="net6.0" />
         </dependencies>
     </metadata>
 
     <files>
-        <file src="krabs\x64\DebugSigning\net462\Microsoft.O365.Security.Native.ETW.dll" target="lib\net462\Microsoft.O365.Security.Native.ETW.dll" />
-        <file src="krabs\x64\DebugSigning\net462\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net462\Microsoft.O365.Security.Native.ETW.pdb" />
-        <file src="krabs\x64\DebugSigning\net462\Microsoft.O365.Security.Native.ETW.xml" target="lib\net462\Microsoft.O365.Security.Native.ETW.xml" />
+        <file src="krabs\x64\DebugSigning\net481\Microsoft.O365.Security.Native.ETW.dll" target="lib\net481\Microsoft.O365.Security.Native.ETW.dll" />
+        <file src="krabs\x64\DebugSigning\net481\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net481\Microsoft.O365.Security.Native.ETW.pdb" />
+        <file src="krabs\x64\DebugSigning\net481\Microsoft.O365.Security.Native.ETW.xml" target="lib\net481\Microsoft.O365.Security.Native.ETW.xml" />
         <file src="krabs\x64\DebugSigning\net6.0\Microsoft.O365.Security.Native.ETW.dll" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.dll" />
         <file src="krabs\x64\DebugSigning\net6.0\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.pdb" />
         <file src="krabs\x64\DebugSigning\net6.0\Microsoft.O365.Security.Native.ETW.xml" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.xml" />

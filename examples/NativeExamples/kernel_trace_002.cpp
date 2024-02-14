@@ -20,12 +20,12 @@ void kernel_trace_002::start()
     //    krabs::kernel_provider provider(SOME_GUID, SOME_ULONG_MASK_VALUE);
     krabs::kernel::object_manager_provider ob_provider;
     ob_provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
-        if (record.EventHeader.EventDescriptor.Opcode == 33) {
+        if (record.EventHeader.EventDescriptor.Opcode == 32) {
             krabs::schema schema(record, trace_context.schema_locator);
             krabs::parser parser(schema);
             std::wstring name = parser.parse<std::wstring>(L"ObjectName");
-            if (name.length() >= 3 && name.compare(name.length() - 3, 3, L"dll") == 0)
-                std::wcout << L"Handle closed for object with name " << name << std::endl;
+            //if (name.length() >= 3 && name.compare(name.length() - 3, 3, L"dll") == 0)
+                std::wcout << L"Handle ID_CREATE_HANDLE for object with name " << name << std::endl;
         }
         });
     trace.enable(ob_provider);
@@ -53,7 +53,7 @@ void kernel_trace_002::start()
         std::wcout << L" opcode_name=" << schema.opcode_name();
         std::wcout << std::endl;
         });
-    trace.enable(hive_provider);
+    //trace.enable(hive_provider);
 
     trace.start();
 }
