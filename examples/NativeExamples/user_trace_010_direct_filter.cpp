@@ -43,13 +43,16 @@ void user_trace_010_direct_filter::start()
 
     auto custom_filter = std::make_shared<krabs::system_flags_event_filter>(0xFFFFFFFFFFFF, 4);// krabs::none_type_filter((unsigned long long)0xFFFFFFFFFFFF, 4);
     auto eventid = std::make_shared<krabs::event_id_event_filter>(std::set<unsigned short>{ 5 }, true);
-    //auto eventname = std::make_shared<krabs::event_name_event_filter>(std::set<std::string>{ "name1", "name2" }, true);
+    auto pid = std::make_shared<krabs::event_pid_event_filter>(std::set<unsigned short>{ 4 }, true);
+
+    auto eventname = std::make_shared<krabs::event_name_event_filter>(std::set<std::string>{ "name1", "name2" }, true);
     //auto eventid = krabs::event_id_type_filter({ 5 }, true);
-    auto payload_filter = std::make_shared<krabs::event_payload_event_filter>(L"DesiredAccess", (unsigned short)PAYLOADFIELD_NE, L"4608");
+    auto payload_filter = std::make_shared<krabs::event_payload_event_filter>(L"DesiredAccess", (unsigned short)PAYLOADFIELD_GE, L"12288");
     krabs::direct_event_filters direct_filter({
         eventid,
         payload_filter,
-        custom_filter
+        custom_filter,
+        pid
         //eventname
         });
 
@@ -66,7 +69,7 @@ void user_trace_010_direct_filter::start()
         assert(schema.event_id() == 5);
         krabs::parser parser(schema);
         
-
+        std::wcout << L" PID=" << schema.process_id() << std::endl;
         std::wcout << L" EventID=" << schema.event_id() << std::endl;
         std::wcout << L" TargetProcessId=" << parser.parse<unsigned int>(L"TargetProcessId");
         std::wcout << L" DesiredAccess=" << parser.parse<unsigned int>(L"DesiredAccess");

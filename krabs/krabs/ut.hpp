@@ -10,11 +10,6 @@
 #include "provider.hpp"
 
 #include "property.hpp"
-////#include <windows.h>
-//#include <tdh.h>
-////#include <evntrace.h>
-//
-//#pragma comment(lib, "tdh.lib")
 
 namespace krabs { namespace details {
 
@@ -42,18 +37,23 @@ namespace krabs { namespace details {
 
         struct event_filter_buffers {
             std::vector<BYTE> event_id_buffer;
+            std::vector<BYTE> event_pid_buffer;
+            std::vector<BYTE> event_exe_name_buffer;
             std::vector<BYTE> event_name_buffer;
+            unsigned int pids[MAX_EVENT_FILTER_PID_COUNT] = { 0 };
+            EVENT_FILTER_DESCRIPTOR filter_desc[15] = { 0 };
+            PAYLOAD_FILTER_PREDICATE predicates[MAX_PAYLOAD_PREDICATES] = { 0 };
         };
         //ENABLE_TRACE_PARAMETERS
         struct provider_enable_info {
-            ENABLE_TRACE_PARAMETERS parameters;
+            ENABLE_TRACE_PARAMETERS parameters;         
+            bool rundown_enabled = false;
+            UCHAR level;
+            ULONGLONG any;
+            ULONGLONG all;
+            ULONG enable_property;
+
             event_filter_buffers event_buffer;
-            std::vector<filter_flags> filter_flags_;
-            bool rundown_enabled_ = false;
-            UCHAR level_;
-            ULONGLONG any_;
-            ULONGLONG all_;
-            ULONG enable_property_;
         };
 
         typedef std::map<krabs::guid, provider_enable_info> provider_enable_info_container;
@@ -89,14 +89,35 @@ namespace krabs { namespace details {
          *   todo.
          * </summary>
          */
-        void populate_filter_1();
+        static ULONG populate_system_flags_filter_desc(ut::provider_enable_info& info, const system_flags_event_filter* system_flags);
 
         /**
          * <summary>
          *   todo.
          * </summary>
          */
-        void populate_filter_2();
+        static ULONG populate_event_id_filter_desc(ut::provider_enable_info& info, const event_id_event_filter* system_flags);
+
+        /**
+         * <summary>
+         *   todo.
+         * </summary>
+         */
+        static ULONG populate_event_pid_filter_desc(ut::provider_enable_info& info, const event_pid_event_filter* system_flags);
+
+        /**
+         * <summary>
+         *   todo.
+         * </summary>
+         */
+        static ULONG populate_event_name_filter_desc(ut::provider_enable_info& info, const event_name_event_filter* event_names);
+
+        /**
+         * <summary>
+         *   todo.
+         * </summary>
+         */
+        static ULONG populate_event_payload_filter_desc(ut::provider_enable_info& info, const event_payload_event_filter* event_names);
 
         /**
          * <summary>
@@ -166,113 +187,237 @@ namespace krabs { namespace details {
         return 0;
     }
 
-    inline void ut::populate_filter_1()
+    inline ULONG ut::populate_system_flags_filter_desc(ut::provider_enable_info& info, const system_flags_event_filter* system_flags)
     {
-         
+        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
+        filter_desc.Ptr = reinterpret_cast<ULONGLONG>(&system_flags->get_value());
+        filter_desc.Size = system_flags->get_size();
+        filter_desc.Type = EVENT_FILTER_TYPE_SYSTEM_FLAGS;
 
-
-
+        return 1;
     }
 
-    inline void ut::populate_filter_2()
+    inline ULONG ut::populate_event_id_filter_desc(ut::provider_enable_info& info, const event_id_event_filter* event_ids)
     {
+        /*typedef struct _EVENT_FILTER_EVENT_ID {
+            BOOLEAN FilterIn;
+            UCHAR Reserved;
+            USHORT Count;
+            USHORT Events[ANYSIZE_ARRAY];
+        } EVENT_FILTER_EVENT_ID, * PEVENT_FILTER_EVENT_ID;*/
+        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
+        auto& buffer = info.event_buffer.event_id_buffer;
+        auto event_ids_count = event_ids->get_data().size();
+        auto buffer_size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[event_ids_count]);
+        if (event_ids_count > 0) {
+            filter_desc.Type = EVENT_FILTER_TYPE_EVENT_ID;
+            buffer.resize(buffer_size, 0);
+            auto event_ids_desc = reinterpret_cast<PEVENT_FILTER_EVENT_ID>(&buffer[0]);
+            event_ids_desc->FilterIn = TRUE;
+            event_ids_desc->Count = static_cast<USHORT>(event_ids_count);
+            auto index = 0;
+            for (auto id : event_ids->get_data()) {
+                event_ids_desc->Events[index] = id;
+                index++;
+            }
+            filter_desc.Ptr = reinterpret_cast<ULONGLONG>(event_ids_desc);
+            filter_desc.Size = buffer_size;
 
+            return 1;
+        }
 
+        return 0;
+    }
 
+    inline ULONG ut::populate_event_pid_filter_desc(ut::provider_enable_info& info, const event_pid_event_filter* event_ids)
+    {
+        /*typedef struct _EVENT_FILTER_EVENT_ID {
+            BOOLEAN FilterIn;
+            UCHAR Reserved;
+            USHORT Count;
+            USHORT Events[ANYSIZE_ARRAY];
+        } EVENT_FILTER_EVENT_ID, * PEVENT_FILTER_EVENT_ID;*/
+        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
+        auto& buffer = info.event_buffer.pids;
+        auto event_ids_count = event_ids->get_data().size();
+        //auto buffer_size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[event_ids_count]);
+        if (event_ids_count > 0) {
+            /*filter_desc.Type = EVENT_FILTER_TYPE_PID;
+            buffer.resize(buffer_size, 0);
+            auto event_ids_desc = reinterpret_cast<PEVENT_FILTER_EVENT_ID>(&buffer[0]);
+            event_ids_desc->FilterIn = TRUE;
+            event_ids_desc->Count = static_cast<USHORT>(event_ids_count);
+            auto index = 0;
+            for (auto id : event_ids->get_data()) {
+                event_ids_desc->Events[index] = id;
+                index++;
+            }*/
+            auto index = 0;
+            for (auto id : event_ids->get_data()) {
+                buffer[index] = id;
+                index++;
+            }
 
+            auto size = sizeof(unsigned int) * index;
+            filter_desc.Type = EVENT_FILTER_TYPE_PID;
+            filter_desc.Ptr = reinterpret_cast<ULONGLONG>(buffer);
+            filter_desc.Size = (ULONG)size;
+
+            return 1;
+        }
+
+        return 0;
+    }
+
+    inline ULONG ut::populate_event_name_filter_desc(ut::provider_enable_info& info, const event_name_event_filter* event_names) 
+    {
+        /*typedef struct _EVENT_FILTER_EVENT_NAME {
+            ULONGLONG MatchAnyKeyword;
+            ULONGLONG MatchAllKeyword;
+            UCHAR     Level;
+            BOOLEAN   FilterIn;
+            USHORT    NameCount;
+            UCHAR     Names[ANYSIZE_ARRAY];
+        } EVENT_FILTER_EVENT_NAME, * PEVENT_FILTER_EVENT_NAME;*/
+        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount]; //todo check if slot set
+        auto& buffer = info.event_buffer.event_id_buffer;
+        auto names_count = event_names->get_data().size();
+        auto buffer_size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[names_count]);
+        if (names_count > 0) {
+            filter_desc.Type = EVENT_FILTER_TYPE_EVENT_NAME;
+            buffer.resize(buffer_size, 0);
+            auto event_name_desc = reinterpret_cast<PEVENT_FILTER_EVENT_NAME>(&buffer[0]);
+            event_name_desc->FilterIn = TRUE;
+            event_name_desc->Level = info.level;
+            event_name_desc->MatchAnyKeyword = info.any;
+            event_name_desc->MatchAllKeyword = info.all;
+            
+            // The Names field should be a series of
+            // NameCount null terminated utf-8
+            // event names.
+            auto index = 0;
+            for (auto name : event_names->get_data()) {              
+                name.push_back('\0');
+                for (auto& s : name) {
+                    event_name_desc->Names[index] = s;
+                    index++;
+                }
+                event_name_desc->NameCount = static_cast<USHORT>(names_count);
+            }
+            filter_desc.Ptr = reinterpret_cast<ULONGLONG>(event_name_desc);
+            filter_desc.Size = buffer_size;
+            
+            return 1;
+        }
+        
+        return 0;
+    }
+
+    inline ULONG ut::populate_event_payload_filter_desc(ut::provider_enable_info& info, const event_payload_event_filter* event_payload)
+    {
+        /*typedef struct _PAYLOAD_FILTER_PREDICATE {
+            LPWSTR FieldName;
+            USHORT CompareOp;
+            LPWSTR Value;
+        } PAYLOAD_FILTER_PREDICATE, *PPAYLOAD_FILTER_PREDICATE;*/
+        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
+        auto& predicates = info.event_buffer.predicates;
+        ULONG predicates_count = 0;
+        EVENT_DESCRIPTOR ed = { 0 };
+        PVOID event_filter[MAX_EVENT_FILTERS_COUNT] = { 0 };
+        std::wstring mans{ L"C:\\data\\microsoft-windows-system-events.dll" };
+        ULONG Status = TdhLoadManifestFromBinary((PWSTR)mans.c_str());
+        if (Status != ERROR_SUCCESS) {
+            printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
+        }
+        //0. check if manifest provider
+        //1. load find eval and load manifest
+        //2. polpulate first payload filter
+        predicates[predicates_count].CompareOp = event_payload->get_compare_op();
+        predicates[predicates_count].FieldName = static_cast<LPWSTR>(const_cast<wchar_t*>(event_payload->get_field_name().c_str()));
+        predicates[predicates_count].Value = static_cast<LPWSTR>(const_cast<wchar_t*>(event_payload->get_value().c_str()));
+        ed.Id = 5;
+        //TdhCreatePayloadFilter();
+        Status = TdhCreatePayloadFilter(
+            &info.parameters.SourceId,
+            &ed,
+            TRUE,      // TRUE Match any predicates (OR); FALSE Match all predicates (AND)
+            1,
+            predicates,
+            &event_filter[predicates_count++]);
+        if (Status != ERROR_SUCCESS) {
+            printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
+        }
+        Status = TdhAggregatePayloadFilters(
+            predicates_count,
+            event_filter,
+            NULL,
+            &filter_desc);
+        if (Status != ERROR_SUCCESS) {
+            printf("TdhAggregatePayloadFilters() failed with %lu\n", Status);                 
+        }
+
+        return 1;
     }
 
     inline void ut::populate_provider_enable_info(const ut::provider_type& provider, ut::provider_enable_info& info)
     {
-        //enable_trace_parameters info = {};
-        EVENT_FILTER_DESCRIPTOR filterDesc[15] = { 0 };
         info.parameters.ControlFlags = 0;
         info.parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
         info.parameters.SourceId = provider.guid_;
 
-        info.level_ |= provider.level_;
-        info.any_ |= provider.any_;
-        info.all_ |= provider.all_;
-        info.enable_property_ |= provider.enable_property_;
-        info.rundown_enabled_ |= provider.rundown_enabled_;
+        info.level |= provider.level_;
+        info.any |= provider.any_;
+        info.all |= provider.all_;
+        info.enable_property |= provider.enable_property_;
+        info.rundown_enabled |= provider.rundown_enabled_;
 
         info.parameters.FilterDescCount = 0;
-        info.parameters.EnableFilterDesc = &filterDesc[0];
-        
+        info.parameters.EnableFilterDesc = &info.event_buffer.filter_desc[0];       
+        // There can only be one descriptor for each filter 
+        // type as specified by the Type member of the 
+        // EVENT_FILTER_DESCRIPTOR structure.
         for (const auto& direct_filters : provider.direct_filters_) {
             for (const auto& direct_filter : direct_filters.list_) {
                 switch (direct_filter->get_type()) {
-                case EVENT_FILTER_TYPE_SYSTEM_FLAGS: {
-                    auto& _filterDesc = filterDesc[info.parameters.FilterDescCount];
-                    auto noneTypeFilter = reinterpret_cast<system_flags_event_filter*>(direct_filter.get());
-                    _filterDesc.Ptr = reinterpret_cast<ULONGLONG>(&noneTypeFilter->get_value());
-                    _filterDesc.Size = noneTypeFilter->get_size();
-                    _filterDesc.Type = EVENT_FILTER_TYPE_SYSTEM_FLAGS;
-                    info.parameters.FilterDescCount++;
+                case EVENT_FILTER_TYPE_SYSTEM_FLAGS: {                  
+                    auto system_flags = reinterpret_cast<system_flags_event_filter*>(direct_filter.get());
+                    if (ULONG count = populate_system_flags_filter_desc(info, system_flags))
+                    {
+                        info.parameters.FilterDescCount += count;
+                    }
                     break;
                 }
-                case EVENT_FILTER_TYPE_EVENT_ID: {
-                    auto& _filterDesc = filterDesc[info.parameters.FilterDescCount];
-                    auto idTypeFilter = reinterpret_cast<event_id_event_filter*>(direct_filter.get());
-                    auto filterEventIdCount = idTypeFilter->get_data().size();
-                    auto size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[filterEventIdCount]);
-                    if (filterEventIdCount > 0) {
-                        _filterDesc.Type = EVENT_FILTER_TYPE_EVENT_ID;
-                        info.event_buffer.event_id_buffer.resize(size, 0);
-                        auto filterEventIds = reinterpret_cast<PEVENT_FILTER_EVENT_ID>(&(info.event_buffer.event_id_buffer[0]));
-                        filterEventIds->FilterIn = TRUE;
-                        filterEventIds->Count = static_cast<USHORT>(filterEventIdCount);
-                        auto index = 0;
-                        for (auto id : idTypeFilter->get_data()) {
-                            filterEventIds->Events[index] = id;
-                            index++;
-                        }
-                        _filterDesc.Ptr = reinterpret_cast<ULONGLONG>(filterEventIds);
-                        _filterDesc.Size = size;
+                case EVENT_FILTER_TYPE_EVENT_ID: {                  
+                    auto event_ids = reinterpret_cast<event_id_event_filter*>(direct_filter.get());
+                    if (ULONG count = populate_event_id_filter_desc(info, event_ids))
+                    {
+                        info.parameters.FilterDescCount += count;
                     }
-                    info.parameters.FilterDescCount++;                    
                     break;
                 }
                 case EVENT_FILTER_TYPE_EVENT_NAME: {
-                    auto& _filterDesc = filterDesc[info.parameters.FilterDescCount];
-                    auto nameTypeFilter = reinterpret_cast<event_name_event_filter*>(direct_filter.get());
-                    /*typedef struct _EVENT_FILTER_EVENT_NAME {
-                        ULONGLONG MatchAnyKeyword;
-                        ULONGLONG MatchAllKeyword;
-                        UCHAR     Level;
-                        BOOLEAN   FilterIn;
-                        USHORT    NameCount;
-                        UCHAR     Names[ANYSIZE_ARRAY];
-                    } EVENT_FILTER_EVENT_NAME, * PEVENT_FILTER_EVENT_NAME;*/
-                    auto filterNamesCount = nameTypeFilter->get_data().size();
-                    auto size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[filterNamesCount]);
-                    if (filterNamesCount > 0) {
-                        _filterDesc.Type = EVENT_FILTER_TYPE_EVENT_NAME;
-                        info.event_buffer.event_name_buffer.resize(size, 0);
-                        auto filterEventNames = reinterpret_cast<PEVENT_FILTER_EVENT_NAME>(&(info.event_buffer.event_name_buffer[0]));
-                        filterEventNames->FilterIn = TRUE;
-                        filterEventNames->Level = info.level_;
-                        filterEventNames->MatchAnyKeyword = info.any_;
-                        filterEventNames->MatchAllKeyword = info.all_;
-                        auto index = 0;
-                        for (auto name : nameTypeFilter->get_data()) {
-                            // The Names field should be a series of NameCount nul - terminated utf - 8
-                            // event names.
-                            name.push_back('\0');
-                            for (auto& s : name) {
-                                filterEventNames->Names[index] = s;
-                                index++;
-                            }
-
-                            filterEventNames->NameCount = static_cast<USHORT>(filterNamesCount);
-                        }
-                        _filterDesc.Ptr = reinterpret_cast<ULONGLONG>(filterEventNames);
-                        _filterDesc.Size = size;
+                    auto event_names = reinterpret_cast<event_name_event_filter*>(direct_filter.get());
+                    if (ULONG count = populate_event_name_filter_desc(info, event_names))
+                    {
+                        info.parameters.FilterDescCount += count;
                     }
-                    info.parameters.FilterDescCount++;
                     break;
                 }
                 case EVENT_FILTER_TYPE_PAYLOAD: {
+                    auto event_payload = dynamic_cast<event_payload_event_filter*>(direct_filter.get());
+                    if (ULONG count = populate_event_payload_filter_desc(info, event_payload))
+                    {
+                        info.parameters.FilterDescCount += count;
+                    }
+                    break;
+                }
+                case EVENT_FILTER_TYPE_PID: {
+                    auto event_pids = reinterpret_cast<event_pid_event_filter*>(direct_filter.get());
+                    if (ULONG count = populate_event_pid_filter_desc(info, event_pids))
+                    {
+                        info.parameters.FilterDescCount += count;
+                    }
                     break;
                 }
                 default: {
@@ -281,6 +426,9 @@ namespace krabs { namespace details {
                 }
             }
         }
+
+
+
 
         //return enable_trace_parameters{ 0 };
     }
@@ -304,9 +452,9 @@ namespace krabs { namespace details {
             ULONG status = EnableTraceEx2(trace.registrationHandle_,
                 &enable_info.parameters.SourceId,
                 EVENT_CONTROL_CODE_ENABLE_PROVIDER,
-                enable_info.level_,
-                enable_info.any_,
-                enable_info.all_,
+                enable_info.level,
+                enable_info.any,
+                enable_info.all,
                 0,
                 &enable_info.parameters);
 

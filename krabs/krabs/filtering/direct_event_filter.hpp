@@ -122,6 +122,39 @@ namespace krabs {
         unsigned long size_;
     };
 
+    struct event_pid_event_filter : direct_event_filter_base {
+        event_pid_event_filter(std::set<unsigned short> ids, bool filter_in)
+            : pids_(ids),
+            filter_in_(filter_in),
+            type_(EVENT_FILTER_TYPE_PID),
+            size_(0)
+        {}
+
+        unsigned const int get_type() const override {
+            return type_;
+        }
+
+        unsigned long const get_size() const override {
+            return size_;
+        }
+
+        const std::set<unsigned short>& get_data() const
+        {
+            return pids_;
+        }
+
+        const bool& get_filter_in() const
+        {
+            return filter_in_;
+        }
+
+    private:
+        std::set<unsigned short> pids_;
+        bool filter_in_;
+        unsigned int type_;
+        unsigned long size_;
+    };
+
     struct event_name_event_filter : direct_event_filter_base {
         event_name_event_filter(std::set<std::string> names, bool filter_in)
             : names_(names),
