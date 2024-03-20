@@ -195,16 +195,15 @@ namespace krabs { namespace details {
     void trace_manager<T>::start()
     {
         if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
-            (void)open();
+            register_trace();
+            enable_providers();
         }
         process_trace();
     }
 
     template <typename T>
     EVENT_TRACE_LOGFILE trace_manager<T>::open()
-    {
-        register_trace();
-        enable_providers();
+    {       
         return open_trace();
     }
 

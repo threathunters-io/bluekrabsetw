@@ -83,3 +83,12 @@ struct user_trace_010_direct_filter
     static void start();
 };
 
+struct user_trace_011_search_wevt
+{
+    static void start();
+};
+
+struct user_trace_012_open_trace
+{
+    static void start();
+};

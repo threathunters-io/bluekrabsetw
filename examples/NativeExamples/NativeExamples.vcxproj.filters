@@ -61,6 +61,12 @@
     <ClCompile Include="user_trace_010_direct_filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="user_trace_011_search_wevt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="user_trace_012_open_trace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="examples.h">
