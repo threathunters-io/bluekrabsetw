@@ -109,6 +109,22 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void Open();
 
         /// <summary>
+        /// Opens a trace session.
+        /// </summary>
+        /// <example>
+        ///     var trace = new KernelTrace();
+        ///     // ...
+        ///     trace.Open();
+        ///     // ...
+        ///     trace.Process();
+        /// </example>
+        /// <remarks>
+        /// This is an optional call before Start() if you need the trace
+        /// registered with the ETW subsystem before you start processing events.
+        /// </remarks>
+        virtual void Process();
+
+        /// <summary>
         /// Starts listening for events from the enabled providers.
         /// </summary>
         /// <example>
@@ -222,6 +238,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     inline void KernelTrace::Start()
     {
         ExecuteAndConvertExceptions(return trace_->start());
+    }
+
+    inline void KernelTrace::Process()
+    {
+        ExecuteAndConvertExceptions(return trace_->process());
     }
 
     inline void KernelTrace::Stop()

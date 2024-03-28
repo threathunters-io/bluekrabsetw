@@ -20,6 +20,7 @@ namespace ManagedExamples
             //FakingEvents001.Start();
             //WppTrace001.Start();
             //UserTrace008_DirectFilter.Start();
+            UserTrace009_OpenTrace.Start();
         }
     }
 }
