@@ -14,6 +14,16 @@
 //#include "common.hpp"
 //#include "output_cache.hpp"
 
+namespace krabs { namespace details {
+	class wevt {
+
+	};
+
+}	/* namespace details */ } /* namespace krabs */
+
+
+
+
 namespace krabs {
 	struct resource_metadata {
 		std::wstring name;

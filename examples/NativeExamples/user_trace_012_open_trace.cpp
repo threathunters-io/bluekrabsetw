@@ -9,7 +9,7 @@
 
 void user_trace_012_open_trace::start()
 {
-    krabs::user_trace trace(L"test_sense", true);
+    krabs::user_trace trace(L"test_sense");
     krabs::provider<> provider(krabs::guid(L"{16c6501a-ff2d-46ea-868d-8f96cb0cb52d}"));
 
     provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {

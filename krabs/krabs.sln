@@ -32,6 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "krabs", "krabs", "{371361C8
 		krabs\compiler_check.hpp = krabs\compiler_check.hpp
 		krabs\errors.hpp = krabs\errors.hpp
 		krabs\etw.hpp = krabs\etw.hpp
+		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
 		krabs\guid.hpp = krabs\guid.hpp
 		krabs\kernel_guids.hpp = krabs\kernel_guids.hpp
 		krabs\kernel_providers.hpp = krabs\kernel_providers.hpp
@@ -86,6 +87,17 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeExamples", "..\exampl
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.O365.Security.Native.ETW.NetCore", "..\Microsoft.O365.Security.Native.ETW.NetCore\Microsoft.O365.Security.Native.ETW.NetCore.vcxproj", "{9DE6788C-5759-4A75-B484-ABA4C7EF5F08}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "searching", "searching", "{03BCA2C2-F363-45B0-8745-E193BFBD54C5}"
+	ProjectSection(SolutionItems) = preProject
+		krabs\searching\wevt.hpp = krabs\searching\wevt.hpp
+		discover.hpp = discover.hpp
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "helping", "helping", "{40378D85-BA5E-4FA1-A450-44BFA680B203}"
+	ProjectSection(SolutionItems) = preProject
+		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -155,6 +167,8 @@ Global
 		{600CFE03-FD84-4323-9439-839D81C31972} = {C4AB7F5F-2FB3-4C16-A1F3-F6700C655B02}
 		{32E71DD0-D11A-44DE-8CA8-572995AF2373} = {2E00634C-7E8B-4656-9505-78FF2F5D0EDD}
 		{D31B1A4B-8282-4AED-99FC-9AA5974B9134} = {2E00634C-7E8B-4656-9505-78FF2F5D0EDD}
+		{03BCA2C2-F363-45B0-8745-E193BFBD54C5} = {371361C8-96EC-4D6D-B80B-2E47E3453264}
+		{40378D85-BA5E-4FA1-A450-44BFA680B203} = {371361C8-96EC-4D6D-B80B-2E47E3453264}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82BAA012-2EF9-4303-A429-CDA3655D5009}

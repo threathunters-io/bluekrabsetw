@@ -1,0 +1,6 @@
+
+namespace krabs {
+	class discover {
+		
+	};
+}

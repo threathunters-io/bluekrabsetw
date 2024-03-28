@@ -77,8 +77,8 @@ namespace krabs {
          *   trace namedTrace(L"Some special name");
          * </example>
          */
-        trace(const std::wstring &name, const bool &non_stoppable = false);
-        trace(const wchar_t *name = L"", const bool& non_stoppable = false);
+        trace(const std::wstring &name);
+        trace(const wchar_t *name = L"");
 
         /**
          * <summary>
@@ -323,26 +323,26 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    trace<T>::trace(const std::wstring &name, const bool& non_stoppable)
+    trace<T>::trace(const std::wstring &name)
     : registrationHandle_(INVALID_PROCESSTRACE_HANDLE)
     , sessionHandle_(INVALID_PROCESSTRACE_HANDLE)
     , eventsHandled_(0)
     , buffersRead_(0)
     , context_()
-    , non_stoppable_(non_stoppable)
+    , non_stoppable_(false)
     {
         name_ = T::enforce_name_policy(name);
         ZeroMemory(&properties_, sizeof(EVENT_TRACE_PROPERTIES));
     }
 
     template <typename T>
-    trace<T>::trace(const wchar_t *name, const bool& non_stoppable)
+    trace<T>::trace(const wchar_t *name)
     : registrationHandle_(INVALID_PROCESSTRACE_HANDLE)
     , sessionHandle_(INVALID_PROCESSTRACE_HANDLE)
     , eventsHandled_(0)
     , buffersRead_(0)
     , context_()
-    , non_stoppable_(non_stoppable)
+    , non_stoppable_(false)
     {
         name_ = T::enforce_name_policy(name);
         ZeroMemory(&properties_, sizeof(EVENT_TRACE_PROPERTIES));
@@ -415,7 +415,7 @@ namespace krabs {
     EVENT_TRACE_LOGFILE trace<T>::open()
     {
         eventsHandled_ = 0;
-
+        non_stoppable_ = true;
         details::trace_manager<trace> manager(*this);
         return manager.open();
     }
