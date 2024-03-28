@@ -197,6 +197,7 @@ namespace krabs { namespace details {
         if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             register_trace();
             enable_providers();
+            (void)open_trace();
         }
         process_trace();
     }
