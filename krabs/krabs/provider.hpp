@@ -661,8 +661,8 @@ namespace krabs {
         tmp.any_            = static_cast<ULONGLONG>(any_);
         tmp.all_            = static_cast<ULONGLONG>(all_);
         tmp.level_          = static_cast<UCHAR>(level_);
-        tmp.enable_property_ = static_cast<ULONG>(enable_property_);
-        tmp.callbacks_      = this.callbacks_;
+        tmp.trace_flags_    = static_cast<ULONG>(trace_flags_);
+        tmp.callbacks_      = this->callbacks_;
 
         return tmp;
     }
