@@ -653,7 +653,7 @@ namespace krabs {
     {
         rundown_enabled_ = true;
     }
-
+    
     template <typename T>
     provider<T>::operator provider<>() const
     {
@@ -662,7 +662,7 @@ namespace krabs {
         tmp.all_            = static_cast<ULONGLONG>(all_);
         tmp.level_          = static_cast<UCHAR>(level_);
         tmp.enable_property_ = static_cast<ULONG>(enable_property_);
-        tmp.callbacks_      = this.callbacks_;
+        tmp.callbacks_      = this->callbacks_;
 
         return tmp;
     }
