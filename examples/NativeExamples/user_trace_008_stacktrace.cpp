@@ -15,6 +15,20 @@ void user_trace_008_stacktrace::start()
     process_provider.any(0x10);  // WINEVENT_KEYWORD_PROCESS
     process_provider.enable_property(process_provider.enable_property() | EVENT_ENABLE_PROPERTY_STACK_TRACE);
 
+
+//#define EVENT_ENABLE_PROPERTY_SID                       0x00000001
+//#define EVENT_ENABLE_PROPERTY_TS_ID                     0x00000002
+//#define EVENT_ENABLE_PROPERTY_STACK_TRACE               0x00000004
+//#define EVENT_ENABLE_PROPERTY_PSM_KEY                   0x00000008
+//#define EVENT_ENABLE_PROPERTY_IGNORE_KEYWORD_0          0x00000010
+//#define EVENT_ENABLE_PROPERTY_PROVIDER_GROUP            0x00000020
+//#define EVENT_ENABLE_PROPERTY_ENABLE_KEYWORD_0          0x00000040
+//#define EVENT_ENABLE_PROPERTY_PROCESS_START_KEY         0x00000080
+//#define EVENT_ENABLE_PROPERTY_EVENT_KEY                 0x00000100
+//#define EVENT_ENABLE_PROPERTY_EXCLUDE_INPRIVATE         0x00000200
+//#define EVENT_ENABLE_PROPERTY_ENABLE_SILOS              0x00000400
+//#define EVENT_ENABLE_PROPERTY_SOURCE_CONTAINER_TRACKING 0x00000800 
+
     krabs::event_filter process_filter(krabs::predicates::id_is(1));  // ProcessStart
     process_filter.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
         krabs::schema schema(record, trace_context.schema_locator);

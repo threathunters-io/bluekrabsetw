@@ -5,6 +5,7 @@
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
+using namespace System::Security::Principal;
 
 namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
 
@@ -126,6 +127,50 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
         /// </returns>
         bool TryGetContainerId([Out] System::Guid% result);
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        bool TryGetSid([Out] System::String^% result);
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        bool TryGetProcessStartKey([Out] uint64_t% result);
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        bool TryGetEventKey([Out] uint64_t% result);
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        bool TryGetTsId([Out] uint64_t% result);
 
 #pragma endregion
     };

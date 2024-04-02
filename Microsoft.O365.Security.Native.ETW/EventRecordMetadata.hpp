@@ -30,7 +30,7 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         // For container ID's, we are expecting format "00000000-0000-0000-0000-0000000000000", 
         // 32 hex digits with 4 hyphens, no braces.
         static const size_t CONTAINER_ID_DATA_LENGTH_IN_BYTES = 36;
-
+        //static USHORT i = 0;
 #pragma region EventDescriptor
 
         /// <summary>
@@ -207,6 +207,149 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
 
             // Not found.
             result = System::Guid::Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        virtual bool TryGetSid([Out] System::String^% result)
+        {
+            auto extended_data_count = record_->ExtendedDataCount;
+            for (USHORT i = 0; i < extended_data_count; i++)
+            {
+                auto& extended_data = record_->ExtendedData[i];
+
+                if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_SID)
+                {
+                    try
+                    {
+                        // Convert to managed System::Guid for returning to managed code.
+                        result = System::Security::Principal::SecurityIdentifier(IntPtr(static_cast<Int64>(extended_data.DataPtr))).ToString();                        
+                    }
+                    catch (const std::runtime_error& err)
+                    {
+                        // Convert to managed exception coming from managed function.
+                        throw gcnew ParserException(gcnew System::String(err.what()));
+                    }
+
+                    return true;
+                }
+            }
+
+            // Not found.
+            result = nullptr;
+            return false;
+        }
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        virtual bool TryGetProcessStartKey([Out] uint64_t% result)
+        {
+            auto extended_data_count = record_->ExtendedDataCount;
+            for (USHORT i = 0; i < extended_data_count; i++)
+            {
+                auto& extended_data = record_->ExtendedData[i];
+
+                if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_PROCESS_START_KEY)
+                {
+                    try
+                    {
+                        // Convert to managed System::Guid for returning to managed code.
+                        result = (reinterpret_cast<_EVENT_EXTENDED_ITEM_PROCESS_START_KEY*>(extended_data.DataPtr))->ProcessStartKey;
+                    }
+                    catch (const std::runtime_error& err)
+                    {
+                        // Convert to managed exception coming from managed function.
+                        throw gcnew ParserException(gcnew System::String(err.what()));
+                    }
+
+                    return true;
+                }
+            }
+
+            // Not found.
+            result = 0;
+            return false;
+        }
+
+        /// <summary>
+        /// If the event's extended data contains a Windows container ID (i.e. event came from inside
+        /// a container using process isolation), retrieve it.
+        /// Can be expensive, avoid calling more than once per event.
+        /// </summary>
+        /// <returns>
+        /// True if a Guid was present. False if not. If a Guid was present, it will be written into the result 
+        /// parameter. Throws a ContainerIdFormatException if the container ID is present but parsing fails.
+        /// </returns>
+        virtual bool TryGetEventKey([Out] uint64_t% result)
+        {
+            auto extended_data_count = record_->ExtendedDataCount;
+            for (USHORT i = 0; i < extended_data_count; i++)
+            {
+                auto& extended_data = record_->ExtendedData[i];
+
+                if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_EVENT_KEY)
+                {
+                    try
+                    {
+                        // Convert to managed System::Guid for returning to managed code.
+                        result = (reinterpret_cast<_EVENT_EXTENDED_ITEM_EVENT_KEY*>(extended_data.DataPtr))->Key;
+                    }
+                    catch (const std::runtime_error& err)
+                    {
+                        // Convert to managed exception coming from managed function.
+                        throw gcnew ParserException(gcnew System::String(err.what()));
+                    }
+
+                    return true;
+                }
+            }
+
+            // Not found.
+            result = 0;
+            return false;
+        }
+
+        virtual bool TryGetTsId([Out] uint64_t% result)
+        {
+            auto extended_data_count = record_->ExtendedDataCount;
+            for (USHORT i = 0; i < extended_data_count; i++)
+            {
+                auto& extended_data = record_->ExtendedData[i];
+
+                if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_TS_ID)
+                {
+                    try
+                    {
+                        // Convert to managed System::Guid for returning to managed code.
+                        result = (reinterpret_cast<_EVENT_EXTENDED_ITEM_TS_ID*>(extended_data.DataPtr))->SessionId;
+                    }
+                    catch (const std::runtime_error& err)
+                    {
+                        // Convert to managed exception coming from managed function.
+                        throw gcnew ParserException(gcnew System::String(err.what()));
+                    }
+
+                    return true;
+                }
+            }
+
+            // Not found.
+            result = 0;
             return false;
         }
 

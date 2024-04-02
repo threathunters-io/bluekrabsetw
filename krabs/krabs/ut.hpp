@@ -369,9 +369,9 @@ namespace krabs { namespace details {
         info.level |= provider.level_;
         info.any |= provider.any_;
         info.all |= provider.all_;
-        info.enable_property |= provider.enable_property_;
         info.rundown_enabled |= provider.rundown_enabled_;
 
+        info.parameters.EnableProperty |= provider.enable_property_;
         info.parameters.FilterDescCount = 0;
         info.parameters.EnableFilterDesc = &info.event_buffer.filter_desc[0];       
         // There can only be one descriptor for each filter 
