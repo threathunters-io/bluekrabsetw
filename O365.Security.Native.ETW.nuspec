@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>BlueKrabsetw.Native.ETW</id>
-        <version>4.3.4</version>
+        <version>4.3.6</version>
         <title>BlueKrabsetw.Native.ETW - managed wrappers for krabsetw</title>
         <authors>non</authors>
         <owners>non</owners>
@@ -12,8 +12,9 @@
         <description>BlueKrabsetw.Native.ETW is a managed wrapper around the krabsetw ETW library.</description>
         <summary>BlueKrabsetw.Native.ETW is a managed wrapper around the krabsetw ETW library.</summary>
         <releaseNotes>
-            Version 4.3.4:
-              - Add support for ETL file sources
+            Version 4.3.6:
+              - Fix OS version problem
+              - Add support for extended ETW data
         </releaseNotes>
         <copyright>non</copyright>
         <language />

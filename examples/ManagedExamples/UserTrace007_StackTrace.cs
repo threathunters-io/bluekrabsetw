@@ -55,16 +55,16 @@ namespace ManagedExamples
                 if (0 != record.GetUInt32("ReturnCode"))
                     return; // ignore failures
 
-                //var callStack = record.GetStackTrace()
-                                //.Select(a => a.ToUInt64())
-                                //.Where(a => a < 0xFFFF000000000000) // skip kernel addresses (for now)
-                                //.Select(a => MemoryMap.GetClosestSymbol(processId, a));
+                var callStack = record.GetStackTrace()
+                                .Select(a => a.ToUInt64())
+                                .Where(a => a < 0xFFFF000000000000) // skip kernel addresses (for now)
+                                .Select(a => MemoryMap.GetClosestSymbol(processId, a));
                 
 
 
 
-                //Console.WriteLine($"{MemoryMap.GetProcessName(processId)} -> ntoskrnl!PsOpenProcess({ToString(desiredAccess)}, {MemoryMap.GetProcessName(targetProcessId)})\n" +
-                                  //$"\t[{String.Join(",", callStack)}]");
+                Console.WriteLine($"{MemoryMap.GetProcessName(processId)} -> ntoskrnl!PsOpenProcess({ToString(desiredAccess)}, {MemoryMap.GetProcessName(targetProcessId)})\n" +
+                                  $"\t[{String.Join(",", callStack)}]");
             };
             provider.AddFilter(processFilter);
 
@@ -88,35 +88,23 @@ namespace ManagedExamples
             // Event 5 - ImageLoad
             var imageLoadFilter = new EventFilter(Filter.EventIdIs(5));
             imageLoadFilter.OnEvent += (record) => {
-                String Sid;
-                record.TryGetSid(out Sid);
-
-                UInt64 ProcessStartKey;
-                record.TryGetProcessStartKey(out ProcessStartKey);
-
-                UInt64 EventKey;
-                record.TryGetEventKey(out EventKey);
-
-                UInt64 TsId;
-                record.TryGetTsId(out TsId);
-
                 var processID = record.GetUInt32("ProcessID");
                 var imageBase = BitConverter.ToUInt64(record.GetBinary("ImageBase"), 0); // C# support for Pointer type in krabs?
                 var imageSize = BitConverter.ToUInt64(record.GetBinary("ImageSize"), 0);
                 var imageName = Path.GetFileNameWithoutExtension(record.GetUnicodeString("ImageName"));
-                //MemoryMap.AddModule(processID, imageBase, imageSize, imageName);
+                MemoryMap.AddModule(processID, imageBase, imageSize, imageName);
             };
 
             // Event 2 - ProcessStop
             var processStopFilter = new EventFilter(Filter.EventIdIs(2));
             processStopFilter.OnEvent += (record) => {
-                //MemoryMap.RemoveProcess(record.ProcessId);
+                MemoryMap.RemoveProcess(record.ProcessId);
             };
 
             processProvider.AddFilter(imageLoadFilter);
             processProvider.AddFilter(processStopFilter);
             trace.Enable(processProvider);
-            //MemoryMap.Initialise();
+            MemoryMap.Initialise();
 
             trace.Enable(provider);
             
