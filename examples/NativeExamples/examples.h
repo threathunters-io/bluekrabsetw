@@ -92,3 +92,8 @@ struct user_trace_012_open_trace
 {
     static void start();
 };
+
+struct user_trace_013_pktmon
+{
+    static void start();
+};

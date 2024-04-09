@@ -19,9 +19,10 @@ int main(void)
     //user_trace_005::start();
     //user_trace_006_predicate_vectors::start();
     //user_trace_007_rundown::start();
-    user_trace_008_stacktrace::start();
+    //user_trace_008_stacktrace::start();
     //user_trace_009_from_file::start();
     //user_trace_010_direct_filter::start();
     //user_trace_011_search_wevt::start();
     //user_trace_012_open_trace::start();
+    user_trace_013_pktmon::start();
 }
