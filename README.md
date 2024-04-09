@@ -2,9 +2,9 @@
 Overview
 ========
 
-**krabsetw** is a C++ library that simplifies interacting with ETW. It allows for any number of traces and providers to be enabled and for client code to register for event notifications from these traces.
+**bluekrabsetw** is a C++ library that simplifies interacting with ETW. It allows for any number of traces and providers to be enabled and for client code to register for event notifications from these traces. **bluekrabsetw** originates from the **krabsetw** c++ library and seeks to improve and include capabilities that have not yet been included in the former library.
 
-**krabsetw** also provides code to simplify parsing generic event data into strongly typed data types.
+**bluekrabsetw** also provides code to simplify parsing generic event data into strongly typed data types.
 
 **Microsoft.O365.Security.Native.ETW** is a C++ CLI (.NET) wrapper around **krabsetw**. It provides the same functionality as **krabsetw** to .NET applications and is used in production by the Office 365 Security team. It's affectionately referred to as **Lobsters**.
 
