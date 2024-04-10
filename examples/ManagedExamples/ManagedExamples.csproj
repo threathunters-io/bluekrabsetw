@@ -86,7 +86,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Threathunters.BlueKrabsetw.Native.ETW\Microsoft.O365.Security.Native.ETW.vcxproj">
       <Project>{ed4e6027-541f-440a-a5ee-15dbb7b89423}</Project>
-      <Name>Microsoft.O365.Security.Native.ETW</Name>
+      <Name>Threathunters.BlueKrabsetw.Native.ETW</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

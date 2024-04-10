@@ -20,12 +20,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		MTA.testsettings = MTA.testsettings
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "krabs headers", "krabs headers", "{1FD19105-D67C-492B-B98F-53E00A324269}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bluekrabs headers", "bluekrabs headers", "{1FD19105-D67C-492B-B98F-53E00A324269}"
 	ProjectSection(SolutionItems) = preProject
 		krabs.hpp = krabs.hpp
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "krabs", "krabs", "{371361C8-96EC-4D6D-B80B-2E47E3453264}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bluekrabs", "bluekrabs", "{371361C8-96EC-4D6D-B80B-2E47E3453264}"
 	ProjectSection(SolutionItems) = preProject
 		krabs\client.hpp = krabs\client.hpp
 		krabs\collection_view.hpp = krabs\collection_view.hpp
