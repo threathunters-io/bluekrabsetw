@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
-    <ProjectReference Include="..\..\Threathunters.BlueKrabsetw.ETW.NetCore\Microsoft.O365.Security.Native.ETW.NetCore.vcxproj" />
+    <ProjectReference Include="..\..\Threathunters.BlueKrabsetw.Native.ETW.NetCore\Microsoft.O365.Security.Native.ETW.NetCore.vcxproj" />
   </ItemGroup>
 
 </Project>

@@ -200,41 +200,41 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Microsoft.O365.Security.Native.ETW\AssemblyInfo.cpp" />
-    <ClCompile Include="..\Microsoft.O365.Security.Native.ETW\ETWLib.cpp" />
+    <ClCompile Include="..\Threathunters.BlueKrabsetw.Native.ETW\AssemblyInfo.cpp" />
+    <ClCompile Include="..\Threathunters.BlueKrabsetw.Native.ETW\ETWLib.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Conversions.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Errors.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventRecord.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventRecordError.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventRecordMetadata.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\EventTraceProperties.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\AnsiString.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\CountedString.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\DirectEventFilter.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\EventFilter.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\Fluent.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\Predicate.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Filtering\UnicodeString.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Guid.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\IEventRecord.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\IEventRecordError.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\IEventRecordMetadata.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\ITrace.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\KernelProvider.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\KernelTrace.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Kernel\KernelProviders.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\NativePtr.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Property.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Provider.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\RawProvider.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\EventHeader.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\Proxy.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\RecordBuilder.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\Testing\SynthRecord.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\TraceStats.hpp" />
-    <ClInclude Include="..\Microsoft.O365.Security.Native.ETW\UserTrace.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Conversions.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Errors.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\EventRecord.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\EventRecordError.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\EventRecordMetadata.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\EventTraceProperties.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\AnsiString.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\CountedString.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\DirectEventFilter.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\EventFilter.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\Fluent.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\Predicate.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\UnicodeString.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Guid.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\IEventRecord.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\IEventRecordError.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\IEventRecordMetadata.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\ITrace.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\KernelProvider.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\KernelTrace.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Kernel\KernelProviders.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\NativePtr.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Property.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Provider.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\RawProvider.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Testing\EventHeader.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Testing\Proxy.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Testing\RecordBuilder.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Testing\SynthRecord.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\TraceStats.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\UserTrace.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

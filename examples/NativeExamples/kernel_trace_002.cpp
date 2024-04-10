@@ -4,8 +4,8 @@
 // This example shows how to enable less documented kernel events.
 
 #include <iostream>
-#include "..\..\krabs\krabs.hpp"
-#include "..\..\krabs\krabs\perfinfo_groupmask.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs\perfinfo_groupmask.hpp"
 #include "examples.h"
 
 void kernel_trace_002::start()

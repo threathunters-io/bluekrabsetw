@@ -42,7 +42,7 @@ namespace EtwTestsCS
 
             var provider = new Provider(WinINetEvent.ProviderId);
             provider.OnEvent +=
-                e => Assert.AreEqual(data, e.GetInt32(prop));
+                e => Assert.AreEqual(data, (uint)e.GetInt32(prop));
 
             trace.Enable(provider);
             proxy.PushEvent(WinINetEvent.CreateRecord(
@@ -73,7 +73,7 @@ namespace EtwTestsCS
 
             var provider = new Provider(WinINetEvent.ProviderId);
             provider.OnEvent +=
-                e => Assert.AreEqual(data, e.GetInt16(prop));
+                e => Assert.AreEqual(data, (ushort)e.GetInt16(prop));
 
             trace.Enable(provider);
             proxy.PushEvent(WinINetEvent.CreateRecord(

@@ -4,7 +4,7 @@
 // This example shows how to use a user_trace with an ETL file
 #include <iostream>
 
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 
 
@@ -20,7 +20,6 @@ HANDLE pktmon_service_start()
 	if (!hManager) {
 		return NULL;
 	}
-	hService = OpenServiceA(hManager, "ndiscap", SERVICE_START | SERVICE_STOP); // 0x10 | 0x20 == 0x30
 	hService = OpenServiceA(hManager, "PktMon", SERVICE_START | SERVICE_STOP); // 0x10 | 0x20 == 0x30
 	CloseServiceHandle(hManager);
 
@@ -34,16 +33,16 @@ HANDLE pktmon_service_start()
 	return hDriver;
 }
 
-HANDLE ndiscap_service_start()
+VOID ndiscap_service_start()
 {
 	SC_HANDLE hManager;
 	SC_HANDLE hService;
-	HANDLE hDriver;
+	//HANDLE hDriver;
 	BOOL status;
 
 	hManager = OpenSCManagerA(NULL, "ServicesActive", SC_MANAGER_CONNECT); // SC_MANAGER_CONNECT == 0x01
 	if (!hManager) {
-		return NULL;
+		return;
 	}
 	hService = OpenServiceA(hManager, "ndiscap", SERVICE_START | SERVICE_STOP); // 0x10 | 0x20 == 0x30
 	CloseServiceHandle(hManager);
@@ -51,21 +50,21 @@ HANDLE ndiscap_service_start()
 	status = StartServiceA(hService, 0, NULL);
 	CloseServiceHandle(hService);
 
-	return hDriver;
+	//return hDriver;
 }
 
 DWORD initiate_capture(HANDLE hDriver) {
 	BOOL status;
 	DWORD IOCTL_start = 0x220404;
-	DWORD IOCTL_filter = 0x220410;
+	//DWORD IOCTL_filter = 0x220410;
 
 	LPVOID IOCTL_start_InBuffer = NULL;
 	DWORD IOCTL_start_bytesReturned = 0;
 	//00   00   00   00    01   00   00   00   00   00   00   00    01   00   00   00    01   00    00    00
 	char IOCTL_start_message[0x14] = { 0x0, 0x0, 0x0, 0x0, 0x01, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x01, 0x0, 0x0, 0x0, 0x01, 0x0, 0x00, 0x00 };
 
-	LPVOID IOCTL_filter_InBuffer = NULL;
-	DWORD IOCTL_filter_bytesReturned = 0;
+	//LPVOID IOCTL_filter_InBuffer = NULL;
+	//DWORD IOCTL_filter_bytesReturned = 0;
 	char IOCTL_filter_message[0xD8] = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -83,8 +82,8 @@ DWORD initiate_capture(HANDLE hDriver) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
 
-	IOCTL_filter_InBuffer = (LPVOID)malloc(0xD8);
-	memcpy(IOCTL_filter_InBuffer, IOCTL_filter_message, 0xD8);
+	//IOCTL_filter_InBuffer = (LPVOID)malloc(0xD8);
+	//memcpy(IOCTL_filter_InBuffer, IOCTL_filter_message, 0xD8);
 	/*status = DeviceIoControl(hDriver, IOCTL_filter, IOCTL_filter_InBuffer, 0xD8, NULL, 0, &IOCTL_filter_bytesReturned, NULL);
 	if (!status) {
 		printf("[!] Error! Filter creation failed!\n");
@@ -98,8 +97,8 @@ DWORD initiate_capture(HANDLE hDriver) {
 	if (status) {
 		return 0;
 	}
-	auto error = GetLastError();
-	return -1;
+	//auto error = GetLastError();
+	return (DWORD) - 1;
 }
 
 void user_trace_013_pktmon::start()

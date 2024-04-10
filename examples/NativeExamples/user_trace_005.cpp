@@ -6,7 +6,7 @@
 // This is a special case due to additional security on this provider.
 
 #include <iostream>
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 
 void user_trace_005::start()

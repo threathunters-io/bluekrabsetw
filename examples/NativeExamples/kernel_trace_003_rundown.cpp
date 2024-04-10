@@ -3,7 +3,7 @@
 
 // This example shows how to collect kernel rundown events that capture system state.
 
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 #include <evntrace.h>
 #include <iostream>

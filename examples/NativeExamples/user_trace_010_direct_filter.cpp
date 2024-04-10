@@ -8,7 +8,7 @@
 #include <chrono>
 #include <thread>
 
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 
 void user_trace_010_direct_filter::start()

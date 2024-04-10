@@ -4,7 +4,7 @@
 // This example shows how to use a user_trace with multiple providers.
 
 #include <iostream>
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 
 static void setup_ps_provider(krabs::provider<>& provider);

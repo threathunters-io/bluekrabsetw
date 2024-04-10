@@ -5,7 +5,7 @@
 // a notice whenever a binary image (executable or DLL) is loaded.
 
 #include <iostream>
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 
 void kernel_trace_001::start()

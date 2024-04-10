@@ -4,7 +4,7 @@
 // This example shows how to use a user_trace with an ETL file
 #include <iostream>
 
-#include "..\..\krabs\krabs.hpp"
+#include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
 
 void user_trace_012_open_trace::start()
