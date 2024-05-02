@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <cassert>
+#include <chrono>
+#include <thread>
 
 #include "..\..\bluekrabs\krabs.hpp"
 #include "examples.h"
@@ -39,12 +41,33 @@ void user_trace_004::start()
 
     auto cb = [](const EVENT_RECORD &record, const krabs::trace_context &trace_context) {
         krabs::schema schema(record, trace_context.schema_locator);
-        assert(schema.event_id() == 11);
-        assert(schema.process_id() == 4);
+       /* assert(schema.event_id() == 11);
+        assert(schema.process_id() == 4);*/
         std::wcout << L"Event " + 
             std::to_wstring(schema.event_id()) +  
             L" received for pid " + 
             std::to_wstring(schema.process_id()) << std::endl;
+        auto extended_data_count = record.ExtendedDataCount;
+        for (USHORT i = 0; i < extended_data_count; i++)
+        {
+            auto& extended_data = record.ExtendedData[i];
+
+            if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_TS_ID)
+            {
+                auto result = (reinterpret_cast<_EVENT_EXTENDED_ITEM_TS_ID*>(extended_data.DataPtr))->SessionId;
+                std::wcout << L"(" << "EVENT_EXTENDED_ITEM_TS_ID" << L") received." << result << std::endl;
+            }
+            if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_SID)
+            {
+
+            }
+            if (extended_data.ExtType == EVENT_HEADER_EXT_TYPE_PROCESS_START_KEY)
+            {
+                auto result = (reinterpret_cast<_EVENT_EXTENDED_ITEM_PROCESS_START_KEY*>(extended_data.DataPtr))->ProcessStartKey;
+                std::wcout << L"(" << "EVENT_HEADER_EXT_TYPE_PROCESS_START_KEY" << L") received." << result << std::endl;
+            }
+        }
+
     };
 
     filter.add_on_event_callback(cb);
@@ -54,5 +77,25 @@ void user_trace_004::start()
     // provider directly will be called for all events that are fired by the ETW producer.
     provider.add_filter(filter);
     trace.enable(provider);
-    trace.start();
+
+    std::thread workerThread([&]() {
+        trace.start();
+        });
+
+    //const int durationInSeconds = 5;
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //trace.stop();
+
+    /*workerThread.join();*/
+    
+    provider.enable_property(provider.enable_property() | EVENT_ENABLE_PROPERTY_PROCESS_START_KEY | EVENT_ENABLE_PROPERTY_SID | EVENT_ENABLE_PROPERTY_TS_ID);
+    //trace.open();
+    trace.enable(provider);
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    trace.stop();
+    workerThread.join();
+    //trace.start();
+
+
+
 }

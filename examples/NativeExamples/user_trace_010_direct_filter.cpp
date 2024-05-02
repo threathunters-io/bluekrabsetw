@@ -48,6 +48,15 @@ void user_trace_010_direct_filter::start()
     auto eventname = std::make_shared<krabs::event_name_event_filter>(std::set<std::string>{ "name1", "name2" }, true);
     //auto eventid = krabs::event_id_type_filter({ 5 }, true);
     auto payload_filter = std::make_shared<krabs::event_payload_event_filter>(L"DesiredAccess", (unsigned short)PAYLOADFIELD_GE, L"12288");
+
+    auto sy = krabs::system_flags_descriptor(0xFFFFFFFFFFFF, 4);
+    auto id = krabs::event_id_descriptor(std::set<unsigned short>{ 5, 12, 31, 131, 133 }, true);
+
+    auto d1 = sy();
+    auto d2 = id();
+
+    krabs::direct_event_filters1 direct_filter1({&sy,&id});
+    auto a = direct_filter1();
     krabs::direct_event_filters direct_filter({
         eventid,
         payload_filter,
@@ -87,7 +96,7 @@ void user_trace_010_direct_filter::start()
              std::wcout << L" ValueName=" << parser.parse<std::wstring>(L"ValueName") << std::endl;
              std::wcout << L" CapturedDataSize=" << parser.parse<unsigned short>(L"CapturedDataSize") << std::endl;
              std::wcout << L" PreviousDataCapturedSize=" << parser.parse<unsigned short>(L"PreviousDataCapturedSize") << std::endl;*/
-
+            
        
         
 

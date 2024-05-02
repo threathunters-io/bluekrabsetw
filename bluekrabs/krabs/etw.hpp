@@ -85,12 +85,24 @@ namespace krabs { namespace details {
         */
         void process();
 
+        
+
+        ///**
+        //* <summary>
+        //* Starts processing the ETW trace identified by the info in the trace type.
+        //* open() needs to called for this to work first.
+        //* </summary>
+        //*/
+        void disable(const typename T::trace_type::provider_type& p);
+
+        void update(const typename T::trace_type::provider_type& p);
+        
         /**
          * <summary>
          * Queries the ETW trace identified by the info in the trace type.
          * </summary>
          */
-        EVENT_TRACE_PROPERTIES query();
+        trace_info query();
 
         /**
          * <summary>
@@ -127,15 +139,18 @@ namespace krabs { namespace details {
     private:
         trace_info fill_trace_info();
         trace_info_v2 fill_trace_info_v2();
-        EVENT_TRACE_LOGFILE fill_logfile();
-        void close_trace();
+        EVENT_TRACE_LOGFILE fill_logfile();              
         void register_trace();
-        EVENT_TRACE_PROPERTIES query_trace();
-        EVENT_TRACE_PROPERTIES_V2 query_trace_v2();
         void stop_trace();
         EVENT_TRACE_LOGFILE open_trace();
+        void close_trace();
+        void update_trace();
+        trace_info query_trace();
+        EVENT_TRACE_PROPERTIES_V2 query_trace_v2();                
         void process_trace();
         void enable_providers();
+        void disable_provider(const typename T::trace_type::provider_type& p);
+        void update_provider(const typename T::trace_type::provider_type& p);
 
     private:
         T &trace_;
@@ -215,7 +230,27 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
-    EVENT_TRACE_PROPERTIES trace_manager<T>::query()
+    void trace_manager<T>::update(const typename T::trace_type::provider_type& p)
+    {
+        if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            throw open_trace_failure();            
+        }
+
+        update_provider(p);
+    }
+
+    template <typename T>
+    void trace_manager<T>::disable(const typename T::trace_type::provider_type& p)
+    {
+        if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            throw open_trace_failure();
+        }
+
+        disable_provider(p);
+    }
+
+    template <typename T>
+    trace_info trace_manager<T>::query()
     {
         return query_trace();
     }
@@ -354,9 +389,26 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
-    EVENT_TRACE_PROPERTIES trace_manager<T>::query_trace()
+    void trace_manager<T>::update_trace()
     {
         trace_info info = fill_trace_info();
+        ULONG status = ControlTrace(
+            NULL,
+            trace_.name_.c_str(),
+            &info.properties,
+            EVENT_TRACE_CONTROL_UPDATE);
+
+        if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
+            error_check_common_conditions(status);
+        }
+    }
+
+    template <typename T>
+    trace_info trace_manager<T>::query_trace()
+    {
+        //trace_info info = fill_trace_info();
+        trace_info info = {};        
+        info.properties.Wnode.BufferSize = sizeof(trace_info);
 
         ULONG status = ControlTrace(
                 NULL,
@@ -368,7 +420,8 @@ namespace krabs { namespace details {
         if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
             error_check_common_conditions(status);
 
-            return info.properties;
+            //return info.properties;
+            return info;
         }
 
         return { };
@@ -507,4 +560,24 @@ namespace krabs { namespace details {
     {
         T::trace_type::enable_providers(trace_);
     }
+
+    template <typename T>
+    void trace_manager<T>::disable_provider(const typename T::trace_type::provider_type& p)
+    {
+        T::trace_type::disable_provider(trace_, p);
+    }
+
+    template <typename T>
+    void trace_manager<T>::update_provider(const typename T::trace_type::provider_type& p)
+    {   
+        if (trace_.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            trace_.properties_ = query_trace().properties;
+            trace_.registrationHandle_ = trace_.properties_.Wnode.HistoricalContext;
+        }
+
+        if (trace_.registrationHandle_ != INVALID_PROCESSTRACE_HANDLE) {  
+            T::trace_type::update_provider(trace_, p);
+        }     
+    }
+
 } /* namespace details */ } /* namespace krabs */

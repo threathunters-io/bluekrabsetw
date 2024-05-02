@@ -4,6 +4,8 @@
 #pragma once
 
 #include <deque>
+#include <map>
+#include <mutex>
 
 #include "compiler_check.hpp"
 #include "guid.hpp"
@@ -52,6 +54,33 @@ namespace krabs {
             , eventsLost(props.EventsLost)
         { }
     };
+
+    /**
+     * <summary>
+     * Selected statistics about an ETW trace
+     * </summary>
+     */
+    class trace_config
+    {
+    public:
+        const uint64_t log_file_mode;
+        const uint64_t flush_timer;
+        const uint64_t enable_flags;
+        const std::wstring log_file_name;
+        const std::wstring logger_name;
+
+
+        trace_config(const details::trace_info& props)
+            : log_file_mode(props.properties.LogFileMode)
+            , flush_timer(props.properties.FlushTimer)
+            , enable_flags(props.properties.EnableFlags)
+            , logger_name(props.traceName)
+            , log_file_name(props.logfileName)
+        {
+
+        }
+    };
+
 
     /**
      * <summary>
@@ -166,7 +195,8 @@ namespace krabs {
 
         /**
          * <summary>
-         * Enables the provider on the given user trace.
+         * Update the session configuration so that the session receives
+         * the requested events from the provider. 
          * </summary>
          * <example>
          *    krabs::trace trace;
@@ -176,6 +206,22 @@ namespace krabs {
          * </example>
          */
         void enable(const typename T::provider_type &p);
+
+        /**
+         * <summary>
+         * Update the session configuration so that the session does not
+         * receive events from the provider.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
+         *    provider<> powershell(id);
+         *    trace.disable(powershell);
+         * </example>
+         */
+        void disable(const typename T::provider_type& p);
+
+        
 
         /**
          * <summary>
@@ -206,6 +252,8 @@ namespace krabs {
          */
         void stop();
 
+        
+
         /**
         * <summary>
         * Opens a trace session.
@@ -221,6 +269,13 @@ namespace krabs {
         * </example>
         */
         EVENT_TRACE_LOGFILE open();
+
+        /**
+         * <summary>
+         * Transition the ETW trace from real-time to file or vice versa.
+         * </summary>
+         */
+        void transition();
 
         /**
         * <summary>
@@ -244,6 +299,13 @@ namespace krabs {
          * </summary>
          */
         trace_stats query_stats();
+
+        /**
+         * <summary>
+         * Queries the trace session to get the configuration.
+         * </summary>
+         */
+        trace_config query_config();
 
         /**
          * <summary>
@@ -291,11 +353,24 @@ namespace krabs {
          */
         void on_event(const EVENT_RECORD &);
 
+        ///**
+        // * <summary>
+        // * Updates a trace session.
+        // * </summary>
+        // * <example>
+        // *    todo
+        // * </example>
+        // */
+        void update(const typename T::provider_type& p);
+
     private:
         std::wstring name_;
         std::wstring logFilename_;
         bool non_stoppable_;
-        std::deque<std::reference_wrapper<const typename T::provider_type>> providers_;
+        std::deque<std::reference_wrapper<const typename T::provider_type>> enabled_providers_;
+        std::deque<std::reference_wrapper<const typename T::provider_type>> disabled_providers_;
+        std::mutex providers_mutex_;
+        //std::map<krabs::guid, unsigned long long> provider_pos_;
 
         TRACEHANDLE registrationHandle_;
         TRACEHANDLE sessionHandle_;
@@ -390,9 +465,43 @@ namespace krabs {
     }
 
     template <typename T>
-    void trace<T>::enable(const typename T::provider_type &p)
+    void trace<T>::enable(const typename T::provider_type& p)
+    {   
+        {
+            std::lock_guard<std::mutex> lock(providers_mutex_);
+            auto& guid = p.guid();
+
+            auto it = std::find_if(
+                enabled_providers_.begin(),
+                enabled_providers_.end(),
+                [&guid](const auto& x) {
+                    return x.get().guid() == guid;
+                });
+
+            
+
+            if (it != enabled_providers_.end()) {
+                enabled_providers_.push_back(std::ref(p));
+                return;
+            }
+        }
+
+        update(p);
+    }
+
+    template <typename T>
+    void trace<T>::disable(const typename T::provider_type& p)
+    {        
+        details::trace_manager<trace> manager(*this);
+        manager.remove(p);
+        //disabled_providers_.push_back(std::ref(p));
+    }
+
+    template <typename T>
+    void trace<T>::update(const typename T::provider_type& p)
     {
-        providers_.push_back(std::ref(p));
+        details::trace_manager<trace> manager(*this);
+        manager.update(p);
     }
 
     template <typename T>
@@ -421,6 +530,12 @@ namespace krabs {
     }
 
     template <typename T>
+    void trace<T>::transition()
+    {
+        return;
+    }
+
+    template <typename T>
     void trace<T>::process()
     {
         eventsHandled_ = 0;
@@ -433,7 +548,14 @@ namespace krabs {
     trace_stats trace<T>::query_stats()
     {
         details::trace_manager<trace> manager(*this);
-        return { eventsHandled_, manager.query() };
+        return { eventsHandled_, manager.query().properties };
+    }
+
+    template <typename T>
+    trace_config trace<T>::query_config()
+    {
+        details::trace_manager<trace> manager(*this);
+        return { manager.query() };
     }
 
     template <typename T>

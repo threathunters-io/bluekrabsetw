@@ -61,6 +61,15 @@ namespace krabs { namespace details {
 
         /**
          * <summary>
+         *   Enables the providers that are attached to the given trace.
+         * </summary>
+         */
+        static void update_provider(
+            krabs::trace<krabs::details::kt>& trace,
+            const krabs::details::kt::provider_type& p);
+
+        /**
+         * <summary>
          *   Enables the configured kernel rundown flags.
          * </summary>
          * <remarks>
@@ -112,7 +121,7 @@ namespace krabs { namespace details {
         const krabs::trace<krabs::details::kt> &trace)
     {
         unsigned long flags = 0;
-        for (auto &provider : trace.providers_) {
+        for (auto &provider : trace.enabled_providers_) {
             flags |= provider.get().flags();
         }
 
@@ -131,7 +140,7 @@ namespace krabs { namespace details {
         error_check_common_conditions(status);
 
         auto group_mask_set = false;
-        for (auto& provider : trace.providers_) {
+        for (auto& provider : trace.enabled_providers_) {
             auto group = provider.get().group_mask();
             PERFINFO_OR_GROUP_WITH_GROUPMASK(group, &(gmi.EventTraceGroupMasks));
             group_mask_set |= (group != 0);
@@ -146,12 +155,26 @@ namespace krabs { namespace details {
         return;
     }
 
+    inline void kt::update_provider(
+        krabs::trace<krabs::details::kt>& trace,
+        const krabs::details::kt::provider_type& p)
+    {    
+        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE)
+            return;
+        GUID g;
+        if (g == p.guid()) {
+
+        }
+        error_check_common_conditions(ERROR_NOT_FOUND);
+        return;
+    }
+
     inline void kt::enable_rundown(
         const krabs::trace<krabs::details::kt>& trace)
     {
         bool rundown_enabled = false;
         ULONG rundown_flags = 0;
-        for (auto& provider : trace.providers_) {
+        for (auto& provider : trace.enabled_providers_) {
             rundown_enabled |= provider.get().rundown_enabled();
             rundown_flags |= provider.get().rundown_flags();
         }
@@ -174,7 +197,7 @@ namespace krabs { namespace details {
         const EVENT_RECORD &record,
         const krabs::trace<krabs::details::kt> &trace)
     {
-        for (auto &provider : trace.providers_) {
+        for (auto &provider : trace.enabled_providers_) {
             if (provider.get().id() == record.EventHeader.ProviderId) {
                 provider.get().on_event(record, trace.context_);
                 return;

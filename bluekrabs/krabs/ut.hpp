@@ -4,6 +4,8 @@
 #pragma once
 
 #include <set>
+#include <chrono>
+#include <iostream>
 
 #include "compiler_check.hpp"
 #include "trace.hpp"
@@ -21,9 +23,6 @@ namespace krabs { namespace details {
      * </summary>
      */
     struct ut {
-
-        typedef krabs::provider<> provider_type;
-        
         struct filter_flags {
             ULONG filter_type_;
             std::set<unsigned short> event_ids_;
@@ -46,6 +45,7 @@ namespace krabs { namespace details {
         };
         //ENABLE_TRACE_PARAMETERS
         struct provider_enable_info {
+            GUID guid;
             ENABLE_TRACE_PARAMETERS parameters;         
             bool rundown_enabled = false;
             UCHAR level;
@@ -56,10 +56,9 @@ namespace krabs { namespace details {
             event_filter_buffers event_buffer;
         };
 
+        typedef krabs::provider<> provider_type;
         typedef std::map<krabs::guid, provider_enable_info> provider_enable_info_container;
-
-        
-
+       
         /**
          * <summary>
          *   Used to assign a name to the trace instance that is being
@@ -132,7 +131,25 @@ namespace krabs { namespace details {
          * </summary>
          */
         static void enable_providers(
-            const krabs::trace<krabs::details::ut> &trace);
+            krabs::trace<krabs::details::ut> &trace);
+       
+        /**
+         * <summary>
+         *   Enables the providers that are attached to the given trace.
+         * </summary>
+         */
+        static void disable_provider(
+            krabs::trace<krabs::details::ut>& trace,
+            const krabs::details::ut::provider_type& p);
+
+        ///**
+        // * <summary>
+        // *   Enables the providers that are attached to the given trace.
+        // * </summary>
+        // */
+        static void update_provider(
+            krabs::trace<krabs::details::ut>& trace,
+            const krabs::details::ut::provider_type& p);
 
         /**
          * <summary>
@@ -141,7 +158,16 @@ namespace krabs { namespace details {
          * </summary>
          */
         static void enable_rundown(
-            const krabs::trace<krabs::details::ut>& trace);
+            krabs::trace<krabs::details::ut>& trace);
+
+        /**
+         * <summary>
+         *   Enables the providers that are attached to the given trace.
+         * </summary>
+         */
+        static void enable_trace(
+            krabs::trace<krabs::details::ut>& trace
+            /*const krabs::details::ut::provider_type& p*/);
 
         /**
          * <summary>
@@ -150,7 +176,7 @@ namespace krabs { namespace details {
          */
         static void forward_events(
             const EVENT_RECORD &record,
-            const krabs::trace<krabs::details::ut> &trace);
+            krabs::trace<krabs::details::ut> &trace);
 
         /**
          * <summary>
@@ -187,7 +213,9 @@ namespace krabs { namespace details {
         return 0;
     }
 
-    inline ULONG ut::populate_system_flags_filter_desc(ut::provider_enable_info& info, const system_flags_event_filter* system_flags)
+    inline ULONG ut::populate_system_flags_filter_desc(
+        ut::provider_enable_info& info, 
+        const system_flags_event_filter* system_flags)
     {
         auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
         filter_desc.Ptr = reinterpret_cast<ULONGLONG>(&system_flags->get_value());
@@ -197,7 +225,9 @@ namespace krabs { namespace details {
         return 1;
     }
 
-    inline ULONG ut::populate_event_id_filter_desc(ut::provider_enable_info& info, const event_id_event_filter* event_ids)
+    inline ULONG ut::populate_event_id_filter_desc(
+        ut::provider_enable_info& info, 
+        const event_id_event_filter* event_ids)
     {
         /*typedef struct _EVENT_FILTER_EVENT_ID {
             BOOLEAN FilterIn;
@@ -229,7 +259,9 @@ namespace krabs { namespace details {
         return 0;
     }
 
-    inline ULONG ut::populate_event_pid_filter_desc(ut::provider_enable_info& info, const event_pid_event_filter* event_ids)
+    inline ULONG ut::populate_event_pid_filter_desc(
+        ut::provider_enable_info& info, 
+        const event_pid_event_filter* event_ids)
     {
         /*typedef struct _EVENT_FILTER_EVENT_ID {
             BOOLEAN FilterIn;
@@ -269,7 +301,9 @@ namespace krabs { namespace details {
         return 0;
     }
 
-    inline ULONG ut::populate_event_name_filter_desc(ut::provider_enable_info& info, const event_name_event_filter* event_names) 
+    inline ULONG ut::populate_event_name_filter_desc(
+        ut::provider_enable_info& info, 
+        const event_name_event_filter* event_names) 
     {
         /*typedef struct _EVENT_FILTER_EVENT_NAME {
             ULONGLONG MatchAnyKeyword;
@@ -313,7 +347,9 @@ namespace krabs { namespace details {
         return 0;
     }
 
-    inline ULONG ut::populate_event_payload_filter_desc(ut::provider_enable_info& info, const event_payload_event_filter* event_payload)
+    inline ULONG ut::populate_event_payload_filter_desc(
+        ut::provider_enable_info& info, 
+        const event_payload_event_filter* event_payload)
     {
         /*typedef struct _PAYLOAD_FILTER_PREDICATE {
             LPWSTR FieldName;
@@ -336,20 +372,21 @@ namespace krabs { namespace details {
         predicates[predicates_count].CompareOp = event_payload->get_compare_op();
         predicates[predicates_count].FieldName = static_cast<LPWSTR>(const_cast<wchar_t*>(event_payload->get_field_name().c_str()));
         predicates[predicates_count].Value = static_cast<LPWSTR>(const_cast<wchar_t*>(event_payload->get_value().c_str()));
+        predicates_count++;
         ed.Id = 5;
         //TdhCreatePayloadFilter();
         Status = TdhCreatePayloadFilter(
-            &info.parameters.SourceId,
+            &info.guid,
             &ed,
             TRUE,      // TRUE Match any predicates (OR); FALSE Match all predicates (AND)
             1,
             predicates,
-            &event_filter[predicates_count++]);
+            &event_filter[0]);
         if (Status != ERROR_SUCCESS) {
             printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
         }
         Status = TdhAggregatePayloadFilters(
-            predicates_count,
+            1,
             event_filter,
             NULL,
             &filter_desc);
@@ -360,11 +397,13 @@ namespace krabs { namespace details {
         return 1;
     }
 
-    inline void ut::populate_provider_enable_info(const ut::provider_type& provider, ut::provider_enable_info& info)
+    inline void ut::populate_provider_enable_info(
+        const ut::provider_type& provider, 
+        ut::provider_enable_info& info)
     {
         info.parameters.ControlFlags = 0;
         info.parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
-        info.parameters.SourceId = provider.guid_;
+        info.guid = provider.guid_;
 
         info.level |= provider.level_;
         info.any |= provider.any_;
@@ -427,30 +466,30 @@ namespace krabs { namespace details {
             }
         }
 
-
-
-
         //return enable_trace_parameters{ 0 };
     }
 
     inline void ut::enable_providers(
-        const krabs::trace<krabs::details::ut>& trace)
+        krabs::trace<krabs::details::ut>& trace)
     {
-        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE)
+        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             return;
-
+        }
+        
+        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
         provider_enable_info_container providers_enable_info;
+
         // This function essentially takes the union of all the provider flags
         // for a given provider GUID. This comes about when multiple providers
         // for the same GUID are provided and request different provider flags.
         // TODO: Only forward the calls that are requested to each provider.
-        for (auto& provider : trace.providers_) {
-            //auto& a = provider.get();
-            auto& enable_info = providers_enable_info[provider.get().guid_];
+        for (auto& provider : trace.enabled_providers_) {
+            auto& _provider = provider.get();
+            auto& enable_info = providers_enable_info[_provider.guid_];
             populate_provider_enable_info(provider, enable_info);
             
             ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                &enable_info.parameters.SourceId,
+                &_provider.guid_,
                 EVENT_CONTROL_CODE_ENABLE_PROVIDER,
                 enable_info.level,
                 enable_info.any,
@@ -462,13 +501,126 @@ namespace krabs { namespace details {
         }
     }
 
+    inline void ut::disable_provider(
+        krabs::trace<krabs::details::ut>& trace,
+        const krabs::details::ut::provider_type& p)
+    {
+        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            return;
+        }
+        
+        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
+
+        auto& guid = p.guid_;
+        auto it = std::find_if(
+            trace.enabled_providers_.begin(),
+            trace.enabled_providers_.end(),
+            [&guid](const auto& x) {
+                return krabs::guid(x.get().guid_) == guid;
+            });
+
+        if (it != trace.enabled_providers_.end()) {
+            ULONG status = EnableTraceEx2(trace.registrationHandle_,
+                &guid,
+                EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                0,
+                0,
+                0,
+                0,
+                NULL);
+
+            error_check_common_conditions(status);
+            if (status == ERROR_SUCCESS) {
+                trace.enabled_providers_.erase(it);
+            }
+        }
+
+
+        /*while (!trace.disabled_providers_.empty()) {
+            {
+                auto& provider = trace.disabled_providers_.front();
+                auto& _provider = provider.get();
+                auto& guid = _provider.guid_;
+
+                auto it = std::find_if(
+                    trace.enabled_providers_.begin(),
+                    trace.enabled_providers_.end(),
+                    [&guid](const auto& x) {
+                        return krabs::guid(x.get().guid_) == guid;
+                    });
+
+                if (it == trace.enabled_providers_.end()) {
+                    ENABLE_TRACE_PARAMETERS parameters = { };
+                    ULONG status = EnableTraceEx2(trace.registrationHandle_,
+                        &guid,
+                        EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                        0,
+                        0,
+                        0,
+                        0,
+                        &parameters);
+
+                    error_check_common_conditions(status);
+                    if (status == ERROR_SUCCESS) {
+                        trace.enabled_providers_.erase(it);
+                    }
+                }
+            }
+            
+            trace.disabled_providers_.pop_front();
+        }*/
+    }
+
+    inline void ut::update_provider(
+        krabs::trace<krabs::details::ut>& trace,
+        const krabs::details::ut::provider_type& p)
+    {
+        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            return;
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(trace.providers_mutex_);
+
+            auto& guid = p.guid();
+            auto it = std::find_if(
+                trace.enabled_providers_.begin(),
+                trace.enabled_providers_.end(),
+                [&guid](const auto& x) {
+                    return krabs::guid(x.get().guid()) == guid;
+                });
+
+            if (it != trace.enabled_providers_.end()) {
+                ULONG status = EnableTraceEx2(trace.registrationHandle_,
+                    &guid,
+                    EVENT_CONTROL_CODE_DISABLE_PROVIDER,
+                    0,
+                    0,
+                    0,
+                    0,
+                    NULL);
+
+                error_check_common_conditions(status);
+
+                if (status == ERROR_SUCCESS) {
+                    return;
+                }
+            }
+        }
+
+
+        
+    }
+
     inline void ut::enable_rundown(
-        const krabs::trace<krabs::details::ut>& trace)
+        krabs::trace<krabs::details::ut>& trace)
     {
         if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE)
             return;
 
-        for (auto& provider : trace.providers_) {
+        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
+
+        for (auto& provider : trace.enabled_providers_) {
             if (!provider.get().rundown_enabled_)
                 continue;
 
@@ -484,12 +636,53 @@ namespace krabs { namespace details {
         }
     }
 
+    inline void ut::enable_trace(
+        krabs::trace<krabs::details::ut>& trace
+        /*const krabs::details::ut::provider_type& p*/)
+    {
+        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            return;
+        }
+
+
+
+    }
+
+
+    //inline void ut::forward_events(
+    //    const EVENT_RECORD& record,
+    //    krabs::trace<krabs::details::ut>& trace)
+    //{            
+    //    krabs::guid guid = record.EventHeader.ProviderId;
+    //    auto& pos = trace.provider_pos_[guid];      
+    //    auto& provider = trace.providers_[pos];
+    //    // for manifest providers, EventHeader.ProviderId is the Provider GUID
+    //    if (record.EventHeader.ProviderId == provider.get().guid_) {                
+    //        provider.get().on_event(record, trace.context_);
+    //        return;
+    //    }
+
+    //    // for MOF providers, EventHeader.Provider is the *Message* GUID
+    //    // we need to ask TDH for event information in order to determine the
+    //    // correct provider to pass this event to
+    //    auto schema = get_event_schema_from_tdh(record);
+    //    auto eventInfo = reinterpret_cast<PTRACE_EVENT_INFO>(schema.get());
+    //    if (eventInfo->ProviderGuid == provider.get().guid_) {               
+    //        provider.get().on_event(record, trace.context_);
+    //        return;
+    //    }
+    //                      
+    //    if (trace.default_callback_ != nullptr)
+    //        trace.default_callback_(record, trace.context_);
+    //}
+
     inline void ut::forward_events(
         const EVENT_RECORD &record,
-        const krabs::trace<krabs::details::ut> &trace)
+        krabs::trace<krabs::details::ut> &trace)
     {
+        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
         // for manifest providers, EventHeader.ProviderId is the Provider GUID
-        for (auto& provider : trace.providers_) {
+        for (auto& provider : trace.enabled_providers_) {
             if (record.EventHeader.ProviderId == provider.get().guid_) {
                 provider.get().on_event(record, trace.context_);
                 return;
@@ -499,15 +692,17 @@ namespace krabs { namespace details {
         // for MOF providers, EventHeader.Provider is the *Message* GUID
         // we need to ask TDH for event information in order to determine the
         // correct provider to pass this event to
-        auto schema = get_event_schema_from_tdh(record);
-        auto eventInfo = reinterpret_cast<PTRACE_EVENT_INFO>(schema.get());
-        for (auto& provider : trace.providers_) {
-            if (eventInfo->ProviderGuid == provider.get().guid_) {
-                provider.get().on_event(record, trace.context_);
-                return;
+        if ((record.EventHeader.EventProperty & EVENT_HEADER_PROPERTY_LEGACY_EVENTLOG) == 1) {
+            auto schema = get_event_schema_from_tdh(record);
+            auto eventInfo = reinterpret_cast<PTRACE_EVENT_INFO>(schema.get());
+            for (auto& provider : trace.enabled_providers_) {
+                if (eventInfo->ProviderGuid == provider.get().guid_) {
+                    provider.get().on_event(record, trace.context_);
+                    return;
+                }
             }
         }
-
+        
         if (trace.default_callback_ != nullptr)
             trace.default_callback_(record, trace.context_);
     }

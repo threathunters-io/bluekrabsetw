@@ -45,7 +45,6 @@ namespace krabs {
     typedef std::function<void(const EVENT_RECORD&, const std::string&)> provider_error_callback;
 
     namespace details {
-
         /**
          * <summary>
          *   Serves as a base for providers and kernel_providers. Handles event
@@ -277,6 +276,13 @@ namespace krabs {
 
         /**
          * <summary>
+         *   Retrieves the GUID associated with this provider.
+         * </summary>
+         */
+        const GUID guid() const;
+
+        /**
+         * <summary>
          * Turns a strongly typed provider<T> to provider<> (useful for
          * creating collections of providers).
          * </summary>
@@ -353,10 +359,17 @@ namespace krabs {
 
         /**
          * <summary>
-         *   Retrieves the GUID associated with this provider.
+         *   Retrieves the krabs::guid associated with this provider.
          * </summary>
          */
          const krabs::guid &id() const;
+
+         /**
+         * <summary>
+         *   Retrieves the GUID associated with this provider.
+         * </summary>
+         */
+         const GUID guid() const;
 
          /**
          * <summary>
@@ -608,6 +621,7 @@ namespace krabs {
             }
 
             guid_ = providerGuid;
+            //guid2_ = krabs::guid(providerGuid);
             any_ = 0;
             all_ = 0;
             level_ = 5;
@@ -667,9 +681,20 @@ namespace krabs {
         return tmp;
     }
 
+    template <typename T>
+    inline const GUID provider<T>::guid() const
+    {
+        return guid_;
+    }
+
     inline const krabs::guid &kernel_provider::id() const
     {
         return id_;
+    }
+
+    inline const GUID kernel_provider::guid() const
+    {
+        return id_.operator GUID();
     }
 
 }
