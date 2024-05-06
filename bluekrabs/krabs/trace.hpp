@@ -33,8 +33,7 @@ namespace krabs {
      * Selected statistics about an ETW trace
      * </summary>
      */
-    class trace_stats
-    {
+    class trace_stats {
     public:
         const uint32_t buffersCount;
         const uint32_t buffersFree;
@@ -60,25 +59,31 @@ namespace krabs {
      * Selected statistics about an ETW trace
      * </summary>
      */
-    class trace_config
-    {
+    class trace_config {
     public:
-        const uint64_t log_file_mode;
-        const uint64_t flush_timer;
-        const uint64_t enable_flags;
+        const uint32_t buffer_size;
+        const uint32_t minimum_buffers;
+        const uint32_t maximum_buffers;
+        const uint32_t maximum_file_size;
+        const uint32_t log_file_mode;
+        const uint32_t flush_timer;
+        const uint32_t enable_flags;
         const std::wstring log_file_name;
         const std::wstring logger_name;
-
-
+        const uint32_t flush_threshold;
+        
         trace_config(const details::trace_info& props)
-            : log_file_mode(props.properties.LogFileMode)
+            : buffer_size(props.properties.BufferSize)
+            , minimum_buffers(props.properties.MinimumBuffers)
+            , maximum_buffers(props.properties.MaximumBuffers)
+            , maximum_file_size(props.properties.MaximumFileSize)
+            , log_file_mode(props.properties.LogFileMode)
             , flush_timer(props.properties.FlushTimer)
             , enable_flags(props.properties.EnableFlags)
+            , flush_threshold(props.properties.FlushThreshold)
             , logger_name(props.traceName)
             , log_file_name(props.logfileName)
-        {
-
-        }
+        { }
     };
 
 
@@ -192,6 +197,20 @@ namespace krabs {
          * </example>
          */
         void set_trace_filename(const std::wstring& filename);
+
+        /**
+         * <summary>
+         * Update the session configuration so that the session receives
+         * the requested events from the provider.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
+         *    provider<> powershell(id);
+         *    trace.enable(powershell);
+         * </example>
+         */
+        void update();
 
         /**
          * <summary>
@@ -361,7 +380,7 @@ namespace krabs {
         // *    todo
         // * </example>
         // */
-        void update(const typename T::provider_type& p);
+        void update_provider(const typename T::provider_type& p);
 
     private:
         std::wstring name_;
@@ -434,6 +453,7 @@ namespace krabs {
     template <typename T>
     void trace<T>::set_trace_properties(const PEVENT_TRACE_PROPERTIES properties)
     {
+        properties_ = {};
         properties_.BufferSize = properties->BufferSize;
         properties_.MinimumBuffers = properties->MinimumBuffers;
         properties_.MaximumBuffers = properties->MaximumBuffers;
@@ -486,7 +506,7 @@ namespace krabs {
             }
         }
 
-        update(p);
+        update_provider(p);
     }
 
     template <typename T>
@@ -498,7 +518,7 @@ namespace krabs {
     }
 
     template <typename T>
-    void trace<T>::update(const typename T::provider_type& p)
+    void trace<T>::update_provider(const typename T::provider_type& p)
     {
         details::trace_manager<trace> manager(*this);
         manager.update(p);
@@ -542,6 +562,13 @@ namespace krabs {
 
         details::trace_manager<trace> manager(*this);
         manager.process();
+    }
+
+    template <typename T>
+    void trace<T>::update()
+    {
+        details::trace_manager<trace> manager(*this);
+        manager.update();
     }
 
     template <typename T>

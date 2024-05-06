@@ -173,7 +173,7 @@
     <ClCompile Include="user_trace_011_search_wevt.cpp" />
     <ClCompile Include="user_trace_012_open_trace.cpp" />
     <ClCompile Include="user_trace_014_transition_trace.cpp" />
-    <ClCompile Include="user_trace_015_update_provider.cpp" />
+    <ClCompile Include="user_trace_015_update.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="examples.h" />

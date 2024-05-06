@@ -12,12 +12,15 @@
 
 
 
-void user_trace_015_update_provider::start()
+void user_trace_015_update::start1()
 {
 
 	krabs::user_trace trace(L"test_sense");
 
     krabs::provider<> provider(krabs::guid(L"{16c6501a-ff2d-46ea-868d-8f96cb0cb52d}"));
+
+
+
 
     provider.enable_property(provider.enable_property() | EVENT_ENABLE_PROPERTY_PROCESS_START_KEY | EVENT_ENABLE_PROPERTY_SID | EVENT_ENABLE_PROPERTY_TS_ID);
 
@@ -59,4 +62,38 @@ void user_trace_015_update_provider::start()
 
 
 	
+}
+
+void user_trace_015_update::start2()
+{
+
+    krabs::user_trace trace(L"test_sense");
+    /*std::thread workerThread([&]() {
+        trace.start();
+        });*/
+    //Sleep(1000);
+    auto tmp = trace.query_config();
+    std::cout << "current config:"  << std::endl;
+    std::cout << "min buffer:" << tmp.minimum_buffers << std::endl;
+    std::cout << "max buffer:" << tmp.maximum_buffers << std::endl;
+    std::cout << "max flush:" << tmp.flush_timer << std::endl;
+    Sleep(1000);
+    
+
+    trace.open();
+    
+    EVENT_TRACE_PROPERTIES etp = {};
+    //etp.MinimumBuffers = 32;
+    etp.MaximumBuffers = 128;
+    etp.FlushTimer = 10;
+    trace.set_trace_properties(&etp);
+    trace.update(); 
+    auto tmp2 = trace.query_config();
+
+    std::cout << "new config:" << std::endl;
+    std::cout << "min buffer:" << tmp2.minimum_buffers << std::endl;
+    std::cout << "max buffer:" << tmp2.maximum_buffers << std::endl;
+    std::cout << "max flush:" << tmp2.flush_timer << std::endl;
+    //trace.stop();
+    //workerThread.join();
 }
