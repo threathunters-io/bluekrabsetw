@@ -269,9 +269,22 @@ namespace krabs {
          *    trace.stop();
          * </example>
          */
-        void stop();
+        void stop(bool force = false);
 
-        
+        /**
+         * <summary>
+         * Closes a trace session.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
+         *    provider<> powershell(id);
+         *    trace.enable(powershell);
+         *    trace.start();
+         *    trace.stop();
+         * </example>
+         */
+        void close();
 
         /**
         * <summary>
@@ -448,6 +461,9 @@ namespace krabs {
         if (!non_stoppable_) {
             stop();
         }
+        else {
+            close();
+        }
     }
 
     template <typename T>
@@ -500,7 +516,7 @@ namespace krabs {
 
             
 
-            if (it != enabled_providers_.end()) {
+            if (it == enabled_providers_.end()) {
                 enabled_providers_.push_back(std::ref(p));
                 return;
             }
@@ -534,10 +550,19 @@ namespace krabs {
     }
 
     template <typename T>
-    void trace<T>::stop()
+    void trace<T>::stop(bool force)
+    {
+        if (!non_stoppable_ || force) {
+            details::trace_manager<trace> manager(*this);
+            manager.stop();
+        }        
+    }
+
+    template <typename T>
+    void trace<T>::close()
     {
         details::trace_manager<trace> manager(*this);
-        manager.stop();
+        manager.close();
     }
 
     template <typename T>

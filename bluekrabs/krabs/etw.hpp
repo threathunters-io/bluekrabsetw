@@ -71,6 +71,13 @@ namespace krabs { namespace details {
         void stop();
 
         /**
+         * <summary>
+         * Stops the ETW trace identified by the info in the trace type.
+         * </summary>
+         */
+        void close();
+
+        /**
         * <summary>
         * Opens the ETW trace identified by the info in the trace type.
         * </summary>
@@ -297,6 +304,12 @@ namespace krabs { namespace details {
     void trace_manager<T>::stop()
     {
         stop_trace();
+        close_trace();
+    }
+
+    template <typename T>
+    void trace_manager<T>::close()
+    {
         close_trace();
     }
 

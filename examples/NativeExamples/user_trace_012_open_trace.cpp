@@ -54,11 +54,19 @@ void user_trace_012_open_trace::start()
 
     trace.enable(provider);
     trace.open();
+    //trace.process();
     std::thread workerThread([&]() {
         trace.process();
         });
     
-    trace.stop();
+    const int durationInSeconds = 30;
+    std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
+    trace.close();
+
+    workerThread.join();
+
+    //workerThread.join();
+    
     //trace.update(provider);
     
 }
