@@ -72,7 +72,9 @@ namespace krabs { namespace details {
 
         /**
          * <summary>
-         * Stops the ETW trace identified by the info in the trace type.
+         * Close the ETW trace identified by the info in the trace type.
+         * In conjunction with stopping, closing detaches a consumer
+         * from an active trace session but does not terminate the session.
          * </summary>
          */
         void close();
@@ -92,18 +94,28 @@ namespace krabs { namespace details {
         */
         void process();
 
-        
-
-        ///**
-        //* <summary>
-        //* Starts processing the ETW trace identified by the info in the trace type.
-        //* open() needs to called for this to work first.
-        //* </summary>
-        //*/
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
         void disable(const typename T::trace_type::provider_type& p);
 
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
         void update();
 
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
         void update(const typename T::trace_type::provider_type& p);
         
         /**
