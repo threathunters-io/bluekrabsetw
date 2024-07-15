@@ -4,9 +4,7 @@ Overview
 
 **bluekrabsetw** is a C++ library that simplifies interacting with ETW. It allows for any number of traces and providers to be enabled and for client code to register for event notifications from these traces. **bluekrabsetw** originates from the **krabsetw** c++ library and seeks to improve and include capabilities that have not yet been included in the former library.
 
-**bluekrabsetw** also provides code to simplify parsing generic event data into strongly typed data types.
-
-**Microsoft.O365.Security.Native.ETW** is a C++ CLI (.NET) wrapper around **krabsetw**. It provides the same functionality as **krabsetw** to .NET applications and is used in production by the Office 365 Security team. It's affectionately referred to as **Lobsters**.
+**bluekrabsetw** also provides code to simplify parsing generic event data into strongly typed data types. **Threathunters.BlueKrabsetw.Native.ETW** is a C++ CLI (.NET) wrapper around **bluekrabsetw**.
 
 Examples & Documentation
 ========
@@ -19,12 +17,12 @@ Examples & Documentation
 
 Important Notes
 ==============
-* `krabsetw` and `Microsoft.O365.Security.Native.ETW` only support x64. No effort has been made to support x86.
-* `krabsetw` and `Microsoft.O365.Security.Native.ETW` are only supported on Windows 7 or Windows 2008R2 machines and above.
+* `bluekrabsetw` and `Threathunters.BlueKrabsetw.Native.ETW` only support x64. No effort has been made to support x86.
+* `bluekrabsetw` and `Threathunters.BlueKrabsetw.Native.ETW` are only supported on Windows 7 or Windows 2008R2 machines and above.
 * Throwing exceptions in the event handler callback or krabsetw or Microsoft.O365.Security.Native.ETW will cause the trace to stop processing events.
 * The call to "start" on the trace object is blocking so thread management may be necessary.
 * The Visual Studio solution is krabs\krabs.sln.
-* When building a native code binary using the `krabsetw` package, please refer to the [compilation readme](krabs/README.md) for notes about the `TYPEASSERT` and `NDEBUG` compilation flags.
+* When building a native code binary using the `bluekrabsetw` package, please refer to the [compilation readme](krabs/README.md) for notes about the `TYPEASSERT` and `NDEBUG` compilation flags.
 
 NuGet Packages
 ==============
