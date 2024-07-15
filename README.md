@@ -6,7 +6,7 @@ Overview
 
 **bluekrabsetw** also provides code to simplify parsing generic event data into strongly typed data types. 
 
-**Threathunters.BlueKrabsetw.Native.ETW** is a C++ CLI (.NET) wrapper around **bluekrabsetw**. 
+**Threathunters.BlueKrabsetw.Native.ETW** is a C++ CLI (.NET) wrapper around **bluekrabsetw**. It provides the same functionality as bluekrabsetw to .NET applications
 
 Examples & Documentation
 ========
