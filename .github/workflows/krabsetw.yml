@@ -17,13 +17,13 @@ jobs:
     - uses: NuGet/setup-nuget@v1.0.5
     - uses: darenm/Setup-VSTest@v1
     - name: nuget restore
-      run: nuget.exe restore krabs\krabs.sln
+      run: nuget.exe restore bluekrabs\bluekrabs.sln
     - name: build release
-      run: msbuild.exe /nologo /m /t:Rebuild /p:Configuration=Release krabs\krabs.sln
+      run: msbuild.exe /nologo /m /t:Rebuild /p:Configuration=Release bluekrabs\bluekrabs.sln
     - name: build debug
-      run: msbuild.exe /nologo /m /t:Rebuild /p:Configuration=Debug krabs\krabs.sln
+      run: msbuild.exe /nologo /m /t:Rebuild /p:Configuration=Debug bluekrabs\bluekrabs.sln
     - name: test native debug
-      run: vstest.console.exe krabs\x64\Debug\krabstests.dll
+      run: vstest.console.exe bluekrabs\x64\Debug\krabstests.dll
     - name: test debug net462
       run: vstest.console.exe tests\ManagedETWTests\bin\Debug\net462\EtwTestsCS.dll
     - name: test debug net6.0
