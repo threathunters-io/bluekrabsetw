@@ -7,22 +7,21 @@ Overview
 
 **Threathunters.BlueKrabsetw.Native.ETW** is a C++ CLI (.NET) wrapper around **bluekrabsetw**. It provides the same functionality as bluekrabsetw to .NET applications.
 
-Additional Capabilities
-==============
-The following capabilities have been integrated into the solution alongside the original krabsetw C++ library:
-- **Provider Enhanced Runtime Capabilities**:
-    - Supports enabling and disabling providers dynamically to adapt to changing requirements. This includes: Provider Addition, Removal, and Update Functionality
-   
-- **Session Enhanced Runtime Capabilities**:
-    - todo
-          
-- **Decoupling of Functionality to Allow Better Control of Sessions**:
-    - Provides improved modularity and flexibility, making it easier to manage and control Sessions.
-
-- **Improved Pre-Filtering Mechanisms**:
-    - Optimizes data processing by allowing more efficient filtering before data is collected.
-
-These enhancements extend the core features of the original krabsetw C++ library, providing a more robust and flexible solution.
+> ### Additional Capabilities
+> The following capabilities have been integrated into the solution alongside the original krabsetw C++ library:
+> * **Provider Enhanced Runtime Capabilities**:
+>    * Supports enabling and disabling providers dynamically to adapt to changing requirements. This includes: Provider Addition, Removal, and Update Functionality
+>  
+> * **Session Enhanced Runtime Capabilities**:
+>    * todo
+>          
+> * **Decoupling of Functionality to Allow Better Control of Sessions**:
+>    * Provides improved modularity and flexibility, making it easier to manage and control Sessions.
+>
+> * **Improved Pre-Filtering Mechanisms**:
+>    * Optimizes data processing by allowing more efficient filtering before data is collected.
+>
+> These enhancements extend the core features of the original krabsetw C++ library, providing a more robust and flexible solution.
 
 Examples & Documentation
 ==============
