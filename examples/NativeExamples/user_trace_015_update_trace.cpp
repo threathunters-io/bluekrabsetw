@@ -11,8 +11,10 @@
 #include "examples.h"
 
 
-
-void user_trace_015_update::start1()
+/// <summary>
+/// start session
+/// </summary>
+void user_trace_015_update_trace::start1()
 {
 
 	krabs::user_trace trace(L"test_sense");
@@ -64,7 +66,10 @@ void user_trace_015_update::start1()
 	
 }
 
-void user_trace_015_update::start2()
+/// <summary>
+/// open session 
+/// </summary>
+void user_trace_015_update_trace::start2()
 {
 
     krabs::user_trace trace(L"test_sense");
@@ -147,3 +152,9 @@ void user_trace_015_update::start2()
 
     workerThread.join();
 }
+
+
+
+
+
+

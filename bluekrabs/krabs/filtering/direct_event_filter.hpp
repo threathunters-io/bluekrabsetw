@@ -283,11 +283,16 @@ namespace krabs {
         {
             auto& count = descriptor_.count;
             if (count == 0) {
-                for (auto& item : list_) {
-                    switch (item->type_) {
-                    case EVENT_FILTER_TYPE_SYSTEM_FLAGS: {
+                for (auto& item : list_) 
+                {
+                    descriptor_.descriptor[count++] = item->operator()();
+                    /*switch (item->type_) 
+                    {
+                    case EVENT_FILTER_TYPE_SYSTEM_FLAGS: 
+                    {
                         auto tmp = static_cast<system_flags_descriptor*>(const_cast<base_descriptor*>(item));
-                        if (tmp) {
+                        if (tmp) 
+                        {
                             descriptor_.descriptor[count++] = (*tmp)();
                         }
                         break;
@@ -323,7 +328,7 @@ namespace krabs {
                     default: {
                         break;
                     }
-                    }
+                    }*/
                 }
             }
             
@@ -334,11 +339,6 @@ namespace krabs {
         mutable descriptor_info descriptor_;
         std::vector<base_descriptor*> list_;
     };
-
-
-
-
-
 
     struct system_flags_event_filter : direct_event_filter_base {
         system_flags_event_filter(unsigned long long flags, unsigned long size)

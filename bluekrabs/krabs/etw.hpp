@@ -108,7 +108,7 @@ namespace krabs { namespace details {
         * open() needs to called for this to work first.
         * </summary>
         */
-        void update();
+        void enable(const typename T::trace_type::provider_type& p);
 
         /**
         * <summary>
@@ -116,8 +116,8 @@ namespace krabs { namespace details {
         * open() needs to called for this to work first.
         * </summary>
         */
-        void update(const typename T::trace_type::provider_type& p);
-        
+        void update();
+      
         /**
          * <summary>
          * Queries the ETW trace identified by the info in the trace type.
@@ -172,7 +172,7 @@ namespace krabs { namespace details {
         void process_trace();
         void enable_providers();
         void disable_provider(const typename T::trace_type::provider_type& p);
-        void update_provider(const typename T::trace_type::provider_type& p);
+        void enable_provider(const typename T::trace_type::provider_type& p);
 
     private:
         T &trace_;
@@ -264,14 +264,14 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
-    void trace_manager<T>::update(
+    void trace_manager<T>::enable(
         const typename T::trace_type::provider_type& p)
     {
         if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             throw open_trace_failure();            
         }
 
-        update_provider(p);
+        enable_provider(p);
     }
 
     template <typename T>
@@ -659,7 +659,7 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
-    void trace_manager<T>::update_provider(
+    void trace_manager<T>::enable_provider(
         const typename T::trace_type::provider_type& p)
     {   
         if (trace_.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
@@ -668,7 +668,7 @@ namespace krabs { namespace details {
         }
 
         if (trace_.registrationHandle_ != INVALID_PROCESSTRACE_HANDLE) {  
-            T::trace_type::update_provider(trace_, p);
+            T::trace_type::enable_provider(trace_, p);
         }     
     }
 

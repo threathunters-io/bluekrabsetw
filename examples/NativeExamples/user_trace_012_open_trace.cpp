@@ -71,6 +71,11 @@
 //    
 //}
 
+
+
+/// <summary>
+/// Note: For existing sessions, pre-filtering capabilities cannot be used.
+/// </summary>
 void user_trace_012_open_trace::start()
 {
     krabs::user_trace trace(L"DefenderApiLogger");

@@ -240,8 +240,6 @@ namespace krabs {
          */
         void disable(const typename T::provider_type& p);
 
-        
-
         /**
          * <summary>
          * Starts a trace session.
@@ -385,24 +383,27 @@ namespace krabs {
          */
         void on_event(const EVENT_RECORD &);
 
-        ///**
-        // * <summary>
-        // * Updates a trace session.
-        // * </summary>
-        // * <example>
-        // *    todo
-        // * </example>
-        // */
-        void update_provider(const typename T::provider_type& p);
+        /////**
+        //// * <summary>
+        //// * Updates a trace session.
+        //// * </summary>
+        //// * <example>
+        //// *    todo
+        //// * </example>
+        //// */
+        //void update_provider(const typename T::provider_type& p);
 
     private:
         std::wstring name_;
         std::wstring logFilename_;
         bool non_stoppable_;
         std::deque<std::reference_wrapper<const typename T::provider_type>> enabled_providers_;
-        std::deque<std::reference_wrapper<const typename T::provider_type>> disabled_providers_;
+        // This essentially takes the union of all the provider flags
+        // for a given provider. This comes about when multiple providers
+        // for the same XX are provided and request different provider flags.
+        // TODO: Only forward the calls that are requested to each provider.
+        typename T::provider_enable_info provider_enable_info_;
         std::mutex providers_mutex_;
-        //std::map<krabs::guid, unsigned long long> provider_pos_;
 
         TRACEHANDLE registrationHandle_;
         TRACEHANDLE sessionHandle_;
@@ -497,54 +498,57 @@ namespace krabs {
     void trace<T>::on_event(const EVENT_RECORD &record)
     {
         ++eventsHandled_;
+        std::lock_guard<std::mutex> lock(providers_mutex_);
         T::forward_events(record, *this);
     }
 
     template <typename T>
     void trace<T>::enable(const typename T::provider_type& p)
-    {   
-        {
-            std::lock_guard<std::mutex> lock(providers_mutex_);
-            auto& guid = p.guid();
-
-            auto it = std::find_if(
-                enabled_providers_.begin(),
-                enabled_providers_.end(),
-                [&guid](const auto& x) {
-                    return x.get().guid() == guid;
+    {                    
+        auto insert_unique = [&](const auto& _p) {
+            auto it = std::find_if(enabled_providers_.begin(), enabled_providers_.end(), [&_p](const auto& x) {
+                return x.get().guid() == _p.guid();
                 });
-
-            
-
             if (it == enabled_providers_.end()) {
-                enabled_providers_.push_back(std::ref(p));
-                return;
+                enabled_providers_.push_back(std::ref(_p));
             }
-        }
+            else {
+                *it = std::ref(_p);
+            }
+        };
 
-        update_provider(p);
+        if (registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            insert_unique(p);
+        }
+        else {        
+            std::lock_guard<std::mutex> lock(providers_mutex_);
+            details::trace_manager<trace> manager(*this);
+            manager.enable(p);
+            insert_unique(p);
+        }                                                                         
     }
 
     template <typename T>
     void trace<T>::disable(const typename T::provider_type& p)
-    {        
-        details::trace_manager<trace> manager(*this);
-        manager.remove(p);
-        //disabled_providers_.push_back(std::ref(p));
-    }
+    {   
+        if (registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            auto it = std::find_if(enabled_providers_.begin(), enabled_providers_.end(), [&p](const auto& x) {
+                return x.get().guid() == p.guid();
+                });
 
-    template <typename T>
-    void trace<T>::update_provider(const typename T::provider_type& p)
-    {
-        details::trace_manager<trace> manager(*this);
-        manager.update(p);
+            if (it != enabled_providers_.end()) {
+                std::lock_guard<std::mutex> lock(providers_mutex_);
+                details::trace_manager<trace> manager(*this);
+                manager.disable(p);
+                enabled_providers_.erase(it);
+            }
+        }
     }
 
     template <typename T>
     void trace<T>::start()
     {
         eventsHandled_ = 0;
-
         details::trace_manager<trace> manager(*this);
         manager.start();
     }

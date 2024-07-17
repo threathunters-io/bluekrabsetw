@@ -74,6 +74,30 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void Enable(O365::Security::ETW::RawProvider ^provider);
 
         /// <summary>
+        /// Enables a provider for the given user trace.
+        /// </summary>
+        /// <param name="provider">the <see cref="O365::Security::ETW::Provider"/> to enable on the trace</param>
+        /// <example>
+        ///     UserTrace trace = new UserTrace();
+        ///     System.Guid powershell = System.Guid.Parse("{...}")
+        ///     Provider provider = new Provider(powershell);
+        ///     trace.Enable(provider);
+        /// </example>
+        virtual void Disable(O365::Security::ETW::Provider^ provider);
+
+        /// <summary>
+        /// Enables a raw provider for the given user trace.
+        /// </summary>
+        /// <param name="provider">the <see cref="O365::Security::ETW::RawProvider"/> to enable on the trace</param>
+        /// <example>
+        ///     UserTrace trace = new UserTrace();
+        ///     System.Guid powershell = System.Guid.Parse("{...}")
+        ///     Provider provider = new RawProvider(powershell);
+        ///     trace.Enable(provider);
+        /// </example>
+        virtual void Disable(O365::Security::ETW::RawProvider^ provider);
+
+        /// <summary>
         /// Sets the trace properties for a session.
         /// Must be called before Open()/Start().
         /// See https://docs.microsoft.com/en-us/windows/win32/etw/event-trace-properties
@@ -161,6 +185,17 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void Stop();
 
         /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        /// <example>
+        ///     UserTrace trace = new UserTrace();
+        ///     // ...
+        ///     trace.Start();
+        ///     trace.Stop();
+        /// </example>
+        virtual void Close();
+
+        /// <summary>
         /// Get stats about events handled by this trace
         /// </summary>
         /// <returns>the <see cref="O365::Security::ETW::TraceStats"/> for the current trace object</returns>
@@ -206,6 +241,16 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         return trace_->enable(*provider->provider_);
     }
 
+    inline void UserTrace::Disable(O365::Security::ETW::Provider^ provider)
+    {
+        return trace_->disable(*provider->provider_);
+    }
+
+    inline void UserTrace::Disable(O365::Security::ETW::RawProvider^ provider)
+    {
+        return trace_->disable(*provider->provider_);
+    }
+
     inline void UserTrace::SetTraceProperties(EventTraceProperties ^properties)
     {
         EVENT_TRACE_PROPERTIES _properties;
@@ -235,6 +280,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     inline void UserTrace::Stop()
     {
         ExecuteAndConvertExceptions(return trace_->stop());
+    }
+
+    inline void UserTrace::Close()
+    {
+        ExecuteAndConvertExceptions(return trace_->close());
     }
 
     inline TraceStats UserTrace::QueryStats()

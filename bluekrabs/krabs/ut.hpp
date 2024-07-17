@@ -22,29 +22,9 @@ namespace krabs { namespace details {
      *   code.
      * </summary>
      */
-    struct ut {
-        struct filter_flags {
-            ULONG filter_type_;
-            std::set<unsigned short> event_ids_;
-            std::set<std::string> event_names_;
-            ULONGLONG custom_value_;
-            ULONG custom_size_;
-            std::wstring field_name_;
-            unsigned short compare_op_;
-            std::wstring value_;
-        };
-
-        struct event_filter_buffers {
-            std::vector<BYTE> event_id_buffer;
-            std::vector<BYTE> event_pid_buffer;
-            std::vector<BYTE> event_exe_name_buffer;
-            std::vector<BYTE> event_name_buffer;
-            unsigned int pids[MAX_EVENT_FILTER_PID_COUNT] = { 0 };
-            EVENT_FILTER_DESCRIPTOR filter_desc[15] = { 0 };
-            PAYLOAD_FILTER_PREDICATE predicates[MAX_PAYLOAD_PREDICATES] = { 0 };
-        };
+    struct ut {       
         //ENABLE_TRACE_PARAMETERS
-        struct provider_enable_info {
+        struct enable_trace_info {
             GUID guid;
             ENABLE_TRACE_PARAMETERS parameters;         
             bool rundown_enabled = false;
@@ -52,13 +32,11 @@ namespace krabs { namespace details {
             ULONGLONG any;
             ULONGLONG all;
             ULONG enable_property;
-
-            event_filter_buffers event_buffer;
+            EVENT_FILTER_DESCRIPTOR filter_desc[15] = { 0 };
         };
 
         typedef krabs::provider<> provider_type;
-        typedef std::map<krabs::guid, provider_enable_info> provider_enable_info_container;
-       
+        typedef std::map<krabs::guid, enable_trace_info> provider_enable_info;
         /**
          * <summary>
          *   Used to assign a name to the trace instance that is being
@@ -88,42 +66,9 @@ namespace krabs { namespace details {
          *   todo.
          * </summary>
          */
-        static ULONG populate_system_flags_filter_desc(ut::provider_enable_info& info, const system_flags_event_filter* system_flags);
-
-        /**
-         * <summary>
-         *   todo.
-         * </summary>
-         */
-        static ULONG populate_event_id_filter_desc(ut::provider_enable_info& info, const event_id_event_filter* system_flags);
-
-        /**
-         * <summary>
-         *   todo.
-         * </summary>
-         */
-        static ULONG populate_event_pid_filter_desc(ut::provider_enable_info& info, const event_pid_event_filter* system_flags);
-
-        /**
-         * <summary>
-         *   todo.
-         * </summary>
-         */
-        static ULONG populate_event_name_filter_desc(ut::provider_enable_info& info, const event_name_event_filter* event_names);
-
-        /**
-         * <summary>
-         *   todo.
-         * </summary>
-         */
-        static ULONG populate_event_payload_filter_desc(ut::provider_enable_info& info, const event_payload_event_filter* event_names);
-
-        /**
-         * <summary>
-         *   todo.
-         * </summary>
-         */
-        static void populate_provider_enable_info(const ut::provider_type& provider, ut::provider_enable_info& info);
+        static void set_provider_enable_info(
+            const ut::provider_type& provider, 
+            ut::enable_trace_info& info);
 
         /**
          * <summary>
@@ -133,21 +78,21 @@ namespace krabs { namespace details {
         static void enable_providers(
             krabs::trace<krabs::details::ut> &trace);
        
+        ///**
+        // * <summary>
+        // *   Enables the providers that are attached to the given trace.
+        // * </summary>
+        // */
+        static void enable_provider(
+            krabs::trace<krabs::details::ut>& trace,
+            const krabs::details::ut::provider_type& p);
+
         /**
          * <summary>
          *   Enables the providers that are attached to the given trace.
          * </summary>
          */
         static void disable_provider(
-            krabs::trace<krabs::details::ut>& trace,
-            const krabs::details::ut::provider_type& p);
-
-        ///**
-        // * <summary>
-        // *   Enables the providers that are attached to the given trace.
-        // * </summary>
-        // */
-        static void update_provider(
             krabs::trace<krabs::details::ut>& trace,
             const krabs::details::ut::provider_type& p);
 
@@ -213,193 +158,9 @@ namespace krabs { namespace details {
         return 0;
     }
 
-    inline ULONG ut::populate_system_flags_filter_desc(
-        ut::provider_enable_info& info, 
-        const system_flags_event_filter* system_flags)
-    {
-        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
-        filter_desc.Ptr = reinterpret_cast<ULONGLONG>(&system_flags->get_value());
-        filter_desc.Size = system_flags->get_size();
-        filter_desc.Type = EVENT_FILTER_TYPE_SYSTEM_FLAGS;
-
-        return 1;
-    }
-
-    inline ULONG ut::populate_event_id_filter_desc(
-        ut::provider_enable_info& info, 
-        const event_id_event_filter* event_ids)
-    {
-        /*typedef struct _EVENT_FILTER_EVENT_ID {
-            BOOLEAN FilterIn;
-            UCHAR Reserved;
-            USHORT Count;
-            USHORT Events[ANYSIZE_ARRAY];
-        } EVENT_FILTER_EVENT_ID, * PEVENT_FILTER_EVENT_ID;*/
-        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
-        auto& buffer = info.event_buffer.event_id_buffer;
-        auto event_ids_count = event_ids->get_data().size();
-        auto buffer_size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[event_ids_count]);
-        if (event_ids_count > 0) {
-            filter_desc.Type = EVENT_FILTER_TYPE_EVENT_ID;
-            buffer.resize(buffer_size, 0);
-            auto event_ids_desc = reinterpret_cast<PEVENT_FILTER_EVENT_ID>(&buffer[0]);
-            event_ids_desc->FilterIn = TRUE;
-            event_ids_desc->Count = static_cast<USHORT>(event_ids_count);
-            auto index = 0;
-            for (auto id : event_ids->get_data()) {
-                event_ids_desc->Events[index] = id;
-                index++;
-            }
-            filter_desc.Ptr = reinterpret_cast<ULONGLONG>(event_ids_desc);
-            filter_desc.Size = buffer_size;
-
-            return 1;
-        }
-
-        return 0;
-    }
-
-    inline ULONG ut::populate_event_pid_filter_desc(
-        ut::provider_enable_info& info, 
-        const event_pid_event_filter* event_ids)
-    {
-        /*typedef struct _EVENT_FILTER_EVENT_ID {
-            BOOLEAN FilterIn;
-            UCHAR Reserved;
-            USHORT Count;
-            USHORT Events[ANYSIZE_ARRAY];
-        } EVENT_FILTER_EVENT_ID, * PEVENT_FILTER_EVENT_ID;*/
-        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
-        auto& buffer = info.event_buffer.pids;
-        auto event_ids_count = event_ids->get_data().size();
-        //auto buffer_size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[event_ids_count]);
-        if (event_ids_count > 0) {
-            /*filter_desc.Type = EVENT_FILTER_TYPE_PID;
-            buffer.resize(buffer_size, 0);
-            auto event_ids_desc = reinterpret_cast<PEVENT_FILTER_EVENT_ID>(&buffer[0]);
-            event_ids_desc->FilterIn = TRUE;
-            event_ids_desc->Count = static_cast<USHORT>(event_ids_count);
-            auto index = 0;
-            for (auto id : event_ids->get_data()) {
-                event_ids_desc->Events[index] = id;
-                index++;
-            }*/
-            auto index = 0;
-            for (auto id : event_ids->get_data()) {
-                buffer[index] = id;
-                index++;
-            }
-
-            auto size = sizeof(unsigned int) * index;
-            filter_desc.Type = EVENT_FILTER_TYPE_PID;
-            filter_desc.Ptr = reinterpret_cast<ULONGLONG>(buffer);
-            filter_desc.Size = (ULONG)size;
-
-            return 1;
-        }
-
-        return 0;
-    }
-
-    inline ULONG ut::populate_event_name_filter_desc(
-        ut::provider_enable_info& info, 
-        const event_name_event_filter* event_names) 
-    {
-        /*typedef struct _EVENT_FILTER_EVENT_NAME {
-            ULONGLONG MatchAnyKeyword;
-            ULONGLONG MatchAllKeyword;
-            UCHAR     Level;
-            BOOLEAN   FilterIn;
-            USHORT    NameCount;
-            UCHAR     Names[ANYSIZE_ARRAY];
-        } EVENT_FILTER_EVENT_NAME, * PEVENT_FILTER_EVENT_NAME;*/
-        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount]; //todo check if slot set
-        auto& buffer = info.event_buffer.event_id_buffer;
-        auto names_count = event_names->get_data().size();
-        auto buffer_size = FIELD_OFFSET(EVENT_FILTER_EVENT_ID, Events[names_count]);
-        if (names_count > 0) {
-            filter_desc.Type = EVENT_FILTER_TYPE_EVENT_NAME;
-            buffer.resize(buffer_size, 0);
-            auto event_name_desc = reinterpret_cast<PEVENT_FILTER_EVENT_NAME>(&buffer[0]);
-            event_name_desc->FilterIn = TRUE;
-            event_name_desc->Level = info.level;
-            event_name_desc->MatchAnyKeyword = info.any;
-            event_name_desc->MatchAllKeyword = info.all;
-            
-            // The Names field should be a series of
-            // NameCount null terminated utf-8
-            // event names.
-            auto index = 0;
-            for (auto name : event_names->get_data()) {              
-                name.push_back('\0');
-                for (auto& s : name) {
-                    event_name_desc->Names[index] = s;
-                    index++;
-                }
-                event_name_desc->NameCount = static_cast<USHORT>(names_count);
-            }
-            filter_desc.Ptr = reinterpret_cast<ULONGLONG>(event_name_desc);
-            filter_desc.Size = buffer_size;
-            
-            return 1;
-        }
-        
-        return 0;
-    }
-
-    inline ULONG ut::populate_event_payload_filter_desc(
-        ut::provider_enable_info& info, 
-        const event_payload_event_filter* event_payload)
-    {
-        /*typedef struct _PAYLOAD_FILTER_PREDICATE {
-            LPWSTR FieldName;
-            USHORT CompareOp;
-            LPWSTR Value;
-        } PAYLOAD_FILTER_PREDICATE, *PPAYLOAD_FILTER_PREDICATE;*/
-        auto& filter_desc = info.parameters.EnableFilterDesc[info.parameters.FilterDescCount];
-        auto& predicates = info.event_buffer.predicates;
-        ULONG predicates_count = 0;
-        EVENT_DESCRIPTOR ed = { 0 };
-        PVOID event_filter[MAX_EVENT_FILTERS_COUNT] = { 0 };
-        std::wstring mans{ L"C:\\data\\microsoft-windows-system-events.dll" };
-        ULONG Status = TdhLoadManifestFromBinary((PWSTR)mans.c_str());
-        if (Status != ERROR_SUCCESS) {
-            printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
-        }
-        //0. check if manifest provider
-        //1. load find eval and load manifest
-        //2. polpulate first payload filter
-        predicates[predicates_count].CompareOp = event_payload->get_compare_op();
-        predicates[predicates_count].FieldName = static_cast<LPWSTR>(const_cast<wchar_t*>(event_payload->get_field_name().c_str()));
-        predicates[predicates_count].Value = static_cast<LPWSTR>(const_cast<wchar_t*>(event_payload->get_value().c_str()));
-        predicates_count++;
-        ed.Id = 5;
-        //TdhCreatePayloadFilter();
-        Status = TdhCreatePayloadFilter(
-            &info.guid,
-            &ed,
-            TRUE,      // TRUE Match any predicates (OR); FALSE Match all predicates (AND)
-            1,
-            predicates,
-            &event_filter[0]);
-        if (Status != ERROR_SUCCESS) {
-            printf("TdhCreatePayloadFilter() failed with %lu\n", Status);
-        }
-        Status = TdhAggregatePayloadFilters(
-            1,
-            event_filter,
-            NULL,
-            &filter_desc);
-        if (Status != ERROR_SUCCESS) {
-            printf("TdhAggregatePayloadFilters() failed with %lu\n", Status);                 
-        }
-
-        return 1;
-    }
-
-    inline void ut::populate_provider_enable_info(
+    inline void ut::set_provider_enable_info(
         const ut::provider_type& provider, 
-        ut::provider_enable_info& info)
+        ut::enable_trace_info& info)
     {
         info.parameters.ControlFlags = 0;
         info.parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
@@ -411,117 +172,97 @@ namespace krabs { namespace details {
         info.rundown_enabled |= provider.rundown_enabled_;
 
         info.parameters.EnableProperty |= provider.enable_property_;
-        info.parameters.FilterDescCount = 0;
-        info.parameters.EnableFilterDesc = &info.event_buffer.filter_desc[0];       
+
         // There can only be one descriptor for each filter 
         // type as specified by the Type member of the 
         // EVENT_FILTER_DESCRIPTOR structure.
-        for (const auto& direct_filters : provider.direct_filters_) {
-            for (const auto& direct_filter : direct_filters.list_) {
-                switch (direct_filter->get_type()) {
-                case EVENT_FILTER_TYPE_SYSTEM_FLAGS: {                  
-                    auto system_flags = reinterpret_cast<system_flags_event_filter*>(direct_filter.get());
-                    if (ULONG count = populate_system_flags_filter_desc(info, system_flags))
-                    {
-                        info.parameters.FilterDescCount += count;
-                    }
-                    break;
-                }
-                case EVENT_FILTER_TYPE_EVENT_ID: {                  
-                    auto event_ids = reinterpret_cast<event_id_event_filter*>(direct_filter.get());
-                    if (ULONG count = populate_event_id_filter_desc(info, event_ids))
-                    {
-                        info.parameters.FilterDescCount += count;
-                    }
-                    break;
-                }
-                case EVENT_FILTER_TYPE_EVENT_NAME: {
-                    auto event_names = reinterpret_cast<event_name_event_filter*>(direct_filter.get());
-                    if (ULONG count = populate_event_name_filter_desc(info, event_names))
-                    {
-                        info.parameters.FilterDescCount += count;
-                    }
-                    break;
-                }
-                case EVENT_FILTER_TYPE_PAYLOAD: {
-                    auto event_payload = dynamic_cast<event_payload_event_filter*>(direct_filter.get());
-                    if (ULONG count = populate_event_payload_filter_desc(info, event_payload))
-                    {
-                        info.parameters.FilterDescCount += count;
-                    }
-                    break;
-                }
-                case EVENT_FILTER_TYPE_PID: {
-                    auto event_pids = reinterpret_cast<event_pid_event_filter*>(direct_filter.get());
-                    if (ULONG count = populate_event_pid_filter_desc(info, event_pids))
-                    {
-                        info.parameters.FilterDescCount += count;
-                    }
-                    break;
-                }
-                default: {
-                    break;
-                }
-                }
-            }
+        if (provider.pre_filter_.count == 0) 
+        {            
+            info.parameters.FilterDescCount = 0;
+            info.parameters.EnableFilterDesc = &info.filter_desc[0];
         }
-
-        //return enable_trace_parameters{ 0 };
+        else
+        {
+            info.parameters.FilterDescCount = provider.pre_filter_.count;
+            info.parameters.EnableFilterDesc = const_cast<EVENT_FILTER_DESCRIPTOR*>(&provider.pre_filter_.descriptor[0]);
+        }                           
     }
 
+    
     inline void ut::enable_providers(
         krabs::trace<krabs::details::ut>& trace)
     {
         if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             return;
         }
-        
-        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
-        provider_enable_info_container providers_enable_info;
-
-        // This function essentially takes the union of all the provider flags
-        // for a given provider GUID. This comes about when multiple providers
-        // for the same GUID are provided and request different provider flags.
-        // TODO: Only forward the calls that are requested to each provider.
+                    
         for (auto& provider : trace.enabled_providers_) {
             auto& _provider = provider.get();
-            auto& enable_info = providers_enable_info[_provider.guid_];
-            populate_provider_enable_info(provider, enable_info);
-            
-            ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                &_provider.guid_,
-                EVENT_CONTROL_CODE_ENABLE_PROVIDER,
-                enable_info.level,
-                enable_info.any,
-                enable_info.all,
-                0,
-                &enable_info.parameters);
-
-            error_check_common_conditions(status);           
+            enable_provider(trace, _provider);       
         }
     }
 
-    inline void ut::disable_provider(
+    inline void ut::enable_provider(
         krabs::trace<krabs::details::ut>& trace,
-        const krabs::details::ut::provider_type& p)
+        const krabs::details::ut::provider_type& provider)
     {
         if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             return;
         }
-        
-        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
 
-        auto& guid = p.guid_;
-        auto it = std::find_if(
-            trace.enabled_providers_.begin(),
-            trace.enabled_providers_.end(),
-            [&guid](const auto& x) {
-                return krabs::guid(x.get().guid_) == guid;
-            });
+        // This essentially takes the union of all the provider flags
+        // for a given provider GUID. This comes about when multiple providers
+        // for the same GUID are provided and request different provider flags.        
+        auto& provider_enable_info = trace.provider_enable_info_[provider.guid_];
+        provider_enable_info.parameters.ControlFlags = 0;
+        provider_enable_info.parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
+        provider_enable_info.guid = provider.guid_;
+        // TODO: Only forward the calls that are requested to each provider.
+        provider_enable_info.level |= provider.level_;
+        provider_enable_info.any |= provider.any_;
+        provider_enable_info.all |= provider.all_;
+        provider_enable_info.rundown_enabled |= provider.rundown_enabled_;
+        provider_enable_info.parameters.EnableProperty |= provider.enable_property_;
 
-        if (it != trace.enabled_providers_.end()) {
+        // There can only be one descriptor for each filter 
+        // type as specified by the Type member of the 
+        // EVENT_FILTER_DESCRIPTOR structure.
+        if (provider.pre_filter_.count == 0)
+        {
+            provider_enable_info.parameters.FilterDescCount = 0;
+            provider_enable_info.parameters.EnableFilterDesc = &provider_enable_info.filter_desc[0];
+        }
+        else
+        {
+            provider_enable_info.parameters.FilterDescCount = provider.pre_filter_.count;
+            provider_enable_info.parameters.EnableFilterDesc = const_cast<EVENT_FILTER_DESCRIPTOR*>(&provider.pre_filter_.descriptor[0]);
+        }
+
+        ULONG status = EnableTraceEx2(trace.registrationHandle_,
+            &provider.guid_,
+            EVENT_CONTROL_CODE_ENABLE_PROVIDER,
+            provider_enable_info.level,
+            provider_enable_info.any,
+            provider_enable_info.all,
+            0,
+            &provider_enable_info.parameters);
+
+        error_check_common_conditions(status);
+    }
+
+
+    inline void ut::disable_provider(
+        krabs::trace<krabs::details::ut>& trace,
+        const krabs::details::ut::provider_type& provider)
+    {
+        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            return;
+        }
+
+        auto it = trace.provider_enable_info_.find(provider.guid_);
+        if (it != trace.provider_enable_info_.end()) {
             ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                &guid,
+                &provider.guid_,
                 EVENT_CONTROL_CODE_DISABLE_PROVIDER,
                 0,
                 0,
@@ -530,95 +271,19 @@ namespace krabs { namespace details {
                 NULL);
 
             error_check_common_conditions(status);
-            if (status == ERROR_SUCCESS) {
-                trace.enabled_providers_.erase(it);
+            if (status == ERROR_SUCCESS) {                              
+                trace.provider_enable_info_.erase(it);
             }
         }
-
-
-        /*while (!trace.disabled_providers_.empty()) {
-            {
-                auto& provider = trace.disabled_providers_.front();
-                auto& _provider = provider.get();
-                auto& guid = _provider.guid_;
-
-                auto it = std::find_if(
-                    trace.enabled_providers_.begin(),
-                    trace.enabled_providers_.end(),
-                    [&guid](const auto& x) {
-                        return krabs::guid(x.get().guid_) == guid;
-                    });
-
-                if (it == trace.enabled_providers_.end()) {
-                    ENABLE_TRACE_PARAMETERS parameters = { };
-                    ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                        &guid,
-                        EVENT_CONTROL_CODE_DISABLE_PROVIDER,
-                        0,
-                        0,
-                        0,
-                        0,
-                        &parameters);
-
-                    error_check_common_conditions(status);
-                    if (status == ERROR_SUCCESS) {
-                        trace.enabled_providers_.erase(it);
-                    }
-                }
-            }
-            
-            trace.disabled_providers_.pop_front();
-        }*/
     }
 
-    inline void ut::update_provider(
-        krabs::trace<krabs::details::ut>& trace,
-        const krabs::details::ut::provider_type& p)
-    {
-        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
-            return;
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(trace.providers_mutex_);
-
-            auto& guid = p.guid();
-            auto it = std::find_if(
-                trace.enabled_providers_.begin(),
-                trace.enabled_providers_.end(),
-                [&guid](const auto& x) {
-                    return krabs::guid(x.get().guid()) == guid;
-                });
-
-            if (it != trace.enabled_providers_.end()) {
-                ULONG status = EnableTraceEx2(trace.registrationHandle_,
-                    &guid,
-                    EVENT_CONTROL_CODE_DISABLE_PROVIDER,
-                    0,
-                    0,
-                    0,
-                    0,
-                    NULL);
-
-                error_check_common_conditions(status);
-
-                if (status == ERROR_SUCCESS) {
-                    return;
-                }
-            }
-        }
-
-
-        
-    }
+    
 
     inline void ut::enable_rundown(
         krabs::trace<krabs::details::ut>& trace)
     {
         if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE)
             return;
-
-        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
 
         for (auto& provider : trace.enabled_providers_) {
             if (!provider.get().rundown_enabled_)
@@ -643,9 +308,6 @@ namespace krabs { namespace details {
         if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             return;
         }
-
-
-
     }
 
 
@@ -680,7 +342,6 @@ namespace krabs { namespace details {
         const EVENT_RECORD &record,
         krabs::trace<krabs::details::ut> &trace)
     {
-        std::lock_guard<std::mutex> lock(trace.providers_mutex_);
         // for manifest providers, EventHeader.ProviderId is the Provider GUID
         for (auto& provider : trace.enabled_providers_) {
             if (record.EventHeader.ProviderId == provider.get().guid_) {

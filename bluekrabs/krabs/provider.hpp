@@ -11,6 +11,7 @@
 #include "compiler_check.hpp"
 #include "filtering/event_filter.hpp"
 #include "filtering/direct_event_filter.hpp"
+#include "filtering/pre_event_filter.hpp"
 #include "perfinfo_groupmask.hpp"
 #include "trace_context.hpp"
 #include "wstring_convert.hpp"
@@ -113,6 +114,8 @@ namespace krabs {
             void add_filter(const event_filter &f);
 
             void add_filter(const direct_event_filters& f);
+
+            void add_filter(const pre_event_filter& f);
         protected:
 
             /**
@@ -127,7 +130,7 @@ namespace krabs {
             std::deque<provider_error_callback> error_callbacks_;
             std::deque<event_filter> filters_;
             std::deque<direct_event_filters> direct_filters_;
-
+            filter_descriptor pre_filter_;
         private:
             template <typename T>
             friend class details::trace_manager;
@@ -302,7 +305,7 @@ namespace krabs {
         T level_;
         T enable_property_;
         bool rundown_enabled_;
-
+        
     private:
         template <typename T>
         friend class details::trace_manager;
@@ -504,11 +507,18 @@ namespace krabs {
         }
 
         template <typename T>
+        void base_provider<T>::add_filter(const pre_event_filter& f)
+        {
+            pre_filter_ = f();
+        }
+
+        template <typename T>
         void base_provider<T>::on_event(const EVENT_RECORD &record, const krabs::trace_context &trace_context) const
         {
             try
             {
-                for (auto& callback : callbacks_) {
+                for (auto& callback : callbacks_) 
+                {
                     callback(record, trace_context);
                 }
 
@@ -518,7 +528,8 @@ namespace krabs {
             }
             catch (krabs::could_not_find_schema& ex)
             {
-                for (auto& error_callback : error_callbacks_) {
+                for (auto& error_callback : error_callbacks_) 
+                {
                     error_callback(record, ex.what());
                 }
             }

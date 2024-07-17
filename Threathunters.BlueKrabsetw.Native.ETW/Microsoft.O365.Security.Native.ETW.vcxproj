@@ -211,6 +211,7 @@
     <ClInclude Include="Filtering\EventFilter.hpp" />
     <ClInclude Include="Filtering\Fluent.hpp" />
     <ClInclude Include="Filtering\Predicate.hpp" />
+    <ClInclude Include="Filtering\PreEventfilter.hpp" />
     <ClInclude Include="Filtering\UnicodeString.hpp" />
     <ClInclude Include="Guid.hpp" />
     <ClInclude Include="IEventRecordError.hpp" />

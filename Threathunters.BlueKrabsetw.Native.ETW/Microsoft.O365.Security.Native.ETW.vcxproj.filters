@@ -125,6 +125,9 @@
     <ClInclude Include="Filtering\DirectEventFilter.hpp">
       <Filter>Header Files\Filtering</Filter>
     </ClInclude>
+    <ClInclude Include="Filtering\PreEventfilter.hpp">
+      <Filter>Header Files\Filtering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".nuget\NuGet.Config">

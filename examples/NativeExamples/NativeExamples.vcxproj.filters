@@ -73,7 +73,10 @@
     <ClCompile Include="user_trace_014_transition_trace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="user_trace_015_update.cpp">
+    <ClCompile Include="user_trace_015_update_trace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="user_trace_016_update_provider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

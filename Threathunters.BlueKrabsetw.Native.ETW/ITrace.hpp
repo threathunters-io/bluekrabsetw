@@ -26,12 +26,22 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// <summary>
         /// Starts listening for events from the enabled providers.
         /// </summary>
+        void Open();
+
+        /// <summary>
+        /// Starts listening for events from the enabled providers.
+        /// </summary>
         void Start();
 
         /// <summary>
         /// Stops listening for events.
         /// </summary>
         void Stop();
+
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        void Close();
 
         /// <summary>
         /// Get stats about events handled by this trace.
@@ -57,6 +67,18 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// </summary>
         /// <param name="provider">The <see cref="O365::Security::ETW::RawProvider"/> to enable.</param>
         void Enable(RawProvider^ provider);
+
+        /// <summary>
+        /// Enables a provider for the given user trace.
+        /// </summary>
+        /// <param name="provider">The <see cref="O365::Security::ETW::Provider"/> to enable.</param>
+        void Disable(Provider^ provider);
+
+        /// <summary>
+        /// Enables a raw provider for the given user trace.
+        /// </summary>
+        /// <param name="provider">The <see cref="O365::Security::ETW::RawProvider"/> to enable.</param>
+        void Disable(RawProvider^ provider);
     };
 
     /// <summary>

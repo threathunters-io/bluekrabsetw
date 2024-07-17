@@ -57,5 +57,6 @@
 #include "krabs/filtering/comparers.hpp"
 #include "krabs/filtering/predicates.hpp"
 #include "krabs/filtering/event_filter.hpp"
+//#include "krabs/filtering/pre_event_filter.hpp"
 
 #pragma warning(pop)

@@ -22,29 +22,35 @@ namespace ManagedExamples
             // This is what EnableRundownEvents() does.
             //provider.EnableRundownEvents();
             List<IDirectEventFilter> tt = new List<IDirectEventFilter>();
-            List<int> ips = new List<int>();
-            for (int i = 5; i <= 7; i++)
-            {
-                
-                ips.Add(i);
-            }
-            var f1 = new EventIdFilter(ips);
+                               
             if (true)
             {
                 var f2 = new SystemFlagsEventFilter(0xFFFFFFFFFFFF, 4);
                 tt.Add(f2);
             }
+
+
+            var f4 = new SystemFlags(0xFFFFFFFFFFFF, 4);
+            List<int> ids = new List<int>();
+            ids.Add(5);
+            var f5 = new EventIds(ids); 
+
             
             //var filter3 = new EventIdFilter(5);
+            var pre = new PreEventFilter( 
+                f4,
+                f5
+            );
             
             //var directFilter = new DirectEventFilters(filter2, filter3);
-            var processFilter = new EventFilter(Filter.EventIdIs(5));  // ProcessStart
-            var directFilter = new DirectEventFilters(tt);
+            //var processFilter = new EventFilter(Filter.EventIdIs(5));  // ProcessStart
+            //var directFilter = new DirectEventFilters(tt);
+            
             //processFilter.OnEvent += ProcessEventHandler;
             //provider.AddFilter(tt);
-            provider.AddFilter(processFilter);
-            provider.AddFilter(directFilter);
-
+            //provider.AddFilter(processFilter);
+            //provider.AddFilter(directFilter);
+            provider.AddFilter(pre);
             // process rundown events - i.e. running processes
             //var processRundownFilter = new EventFilter(Filter.EventIdIs(15));  // ProcessRundown
             provider.OnEvent += ProcessEventHandler;
@@ -56,8 +62,8 @@ namespace ManagedExamples
 
         private static void ProcessEventHandler(IEventRecord record)
         {
-            if(record.Id == 5)
-            {
+            //if(record.Id == 5)
+            //{
                 //var pid = record.GetUInt32("ProcessID");
                 var keyName = record.GetUnicodeString("KeyName");
                 var valueName = record.GetUnicodeString("ValueName");
@@ -68,7 +74,7 @@ namespace ManagedExamples
                 Console.WriteLine($"ValueName={valueName}");
                 Console.WriteLine($"CapturedDataSize={capturedDataSize}");
                 Console.WriteLine($"PreviousDataCapturedSize={previousDataCapturedSize}");
-            }
+            //}
            
         }
     }

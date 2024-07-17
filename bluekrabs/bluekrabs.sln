@@ -47,7 +47,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bluekrabs", "bluekrabs", "{
 		krabs\compiler_check.hpp = krabs\compiler_check.hpp
 		krabs\errors.hpp = krabs\errors.hpp
 		krabs\etw.hpp = krabs\etw.hpp
-		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
 		krabs\guid.hpp = krabs\guid.hpp
 		krabs\kernel_guids.hpp = krabs\kernel_guids.hpp
 		krabs\kernel_providers.hpp = krabs\kernel_providers.hpp
@@ -73,17 +72,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "filtering", "filtering", "{
 		krabs\filtering\comparers.hpp = krabs\filtering\comparers.hpp
 		krabs\filtering\direct_event_filter.hpp = krabs\filtering\direct_event_filter.hpp
 		krabs\filtering\event_filter.hpp = krabs\filtering\event_filter.hpp
+		krabs\filtering\post_event_filter.hpp = krabs\filtering\post_event_filter.hpp
 		krabs\filtering\predicates.hpp = krabs\filtering\predicates.hpp
+		krabs\filtering\pre_event_filter.hpp = krabs\filtering\pre_event_filter.hpp
 		krabs\filtering\view_adapters.hpp = krabs\filtering\view_adapters.hpp
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "helping", "helping", "{531AF202-7C02-4203-9463-F10DE8A996AD}"
-ProjectSection(SolutionItems) = preProject
+	ProjectSection(SolutionItems) = preProject
 		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "searching", "searching", "{2C63BA17-1E15-4B5B-B979-A00C3A331678}"
-ProjectSection(SolutionItems) = preProject
+	ProjectSection(SolutionItems) = preProject
 		discover.hpp = discover.hpp
 		krabs\searching\wevt.hpp = krabs\searching\wevt.hpp
 	EndProjectSection

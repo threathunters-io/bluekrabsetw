@@ -25,7 +25,7 @@ namespace krabs { namespace details {
     struct kt {
 
         typedef krabs::kernel_provider provider_type;
-
+        typedef int provider_enable_info;
         /**
          * <summary>
          *   Used to assign a name to the trace instance that is being
@@ -64,7 +64,7 @@ namespace krabs { namespace details {
          *   Enables the providers that are attached to the given trace.
          * </summary>
          */
-        static void update_provider(
+        static void enable_provider(
             krabs::trace<krabs::details::kt>& trace,
             const krabs::details::kt::provider_type& p);
 
@@ -155,7 +155,7 @@ namespace krabs { namespace details {
         return;
     }
 
-    inline void kt::update_provider(
+    inline void kt::enable_provider(
         krabs::trace<krabs::details::kt>& trace,
         const krabs::details::kt::provider_type& p)
     {    

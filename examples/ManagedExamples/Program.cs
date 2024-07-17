@@ -19,8 +19,8 @@ namespace ManagedExamples
             //UserTrace007_StackTrace.Start();
             //FakingEvents001.Start();
             //WppTrace001.Start();
-            //UserTrace008_DirectFilter.Start();
-            UserTrace009_OpenTrace.Start();
+            UserTrace008_DirectFilter.Start();
+            //UserTrace009_OpenTrace.Start();
             //UserTrace010_ExtendedData.Start();
         }
     }

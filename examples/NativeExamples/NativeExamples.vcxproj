@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClCompile Include="kernel_trace_002.cpp" />
     <ClCompile Include="kernel_trace_003_rundown.cpp" />
+    <ClCompile Include="user_trace_016_update_provider.cpp" />
     <ClCompile Include="user_trace_013_pktmon.cpp" />
     <ClCompile Include="user_trace_005.cpp" />
     <ClCompile Include="kernel_and_user_trace_001.cpp" />
@@ -173,7 +174,7 @@
     <ClCompile Include="user_trace_011_search_wevt.cpp" />
     <ClCompile Include="user_trace_012_open_trace.cpp" />
     <ClCompile Include="user_trace_014_transition_trace.cpp" />
-    <ClCompile Include="user_trace_015_update.cpp" />
+    <ClCompile Include="user_trace_015_update_trace.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="examples.h" />
