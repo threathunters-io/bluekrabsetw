@@ -10,7 +10,6 @@
 
 #include "compiler_check.hpp"
 #include "filtering/event_filter.hpp"
-#include "filtering/direct_event_filter.hpp"
 #include "filtering/pre_event_filter.hpp"
 #include "perfinfo_groupmask.hpp"
 #include "trace_context.hpp"
@@ -113,8 +112,6 @@ namespace krabs {
              */
             void add_filter(const event_filter &f);
 
-            void add_filter(const direct_event_filters& f);
-
             void add_filter(const pre_event_filter& f);
         protected:
 
@@ -129,7 +126,6 @@ namespace krabs {
             std::deque<provider_callback> callbacks_;
             std::deque<provider_error_callback> error_callbacks_;
             std::deque<event_filter> filters_;
-            std::deque<direct_event_filters> direct_filters_;
             filter_descriptor pre_filter_;
         private:
             template <typename T>
@@ -498,12 +494,6 @@ namespace krabs {
         void base_provider<T>::add_filter(const event_filter &f)
         {
             filters_.push_back(f);
-        }
-
-        template <typename T>
-        void base_provider<T>::add_filter(const direct_event_filters& f)
-        {
-            direct_filters_.push_back(f);
         }
 
         template <typename T>

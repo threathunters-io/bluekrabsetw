@@ -122,9 +122,6 @@
     <ClInclude Include="IEventRecordError.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Filtering\DirectEventFilter.hpp">
-      <Filter>Header Files\Filtering</Filter>
-    </ClInclude>
     <ClInclude Include="Filtering\PreEventfilter.hpp">
       <Filter>Header Files\Filtering</Filter>
     </ClInclude>

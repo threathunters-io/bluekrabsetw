@@ -21,13 +21,7 @@ namespace ManagedExamples
             // The trace needs to be sent EVENT_CONTROL_CODE_CAPTURE_STATE.
             // This is what EnableRundownEvents() does.
             //provider.EnableRundownEvents();
-            List<IDirectEventFilter> tt = new List<IDirectEventFilter>();
-                               
-            if (true)
-            {
-                var f2 = new SystemFlagsEventFilter(0xFFFFFFFFFFFF, 4);
-                tt.Add(f2);
-            }
+           
 
 
             var f4 = new SystemFlags(0xFFFFFFFFFFFF, 4);
