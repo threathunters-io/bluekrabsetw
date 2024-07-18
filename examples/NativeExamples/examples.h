@@ -107,8 +107,7 @@ struct user_trace_014_transition_trace
 
 struct user_trace_015_update_trace
 {
-    static void start1();
-    static void start2();
+    static void start();
 };
 
 struct user_trace_016_update_provider

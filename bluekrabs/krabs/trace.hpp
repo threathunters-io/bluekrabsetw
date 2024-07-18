@@ -35,32 +35,13 @@ namespace krabs {
      */
     class trace_stats {
     public:
-        const uint32_t buffersCount;
-        const uint32_t buffersFree;
-        const uint32_t buffersWritten;
-        const uint32_t buffersLost;
-        const uint64_t eventsTotal;
-        const uint64_t eventsHandled;
-        const uint32_t eventsLost;
-
-        trace_stats(uint64_t eventsHandled, const EVENT_TRACE_PROPERTIES& props)
-            : buffersCount(props.NumberOfBuffers)
-            , buffersFree(props.FreeBuffers)
-            , buffersWritten(props.BuffersWritten)
-            , buffersLost(props.RealTimeBuffersLost)
-            , eventsTotal(eventsHandled + props.EventsLost)
-            , eventsHandled(eventsHandled)
-            , eventsLost(props.EventsLost)
-        { }
-    };
-
-    /**
-     * <summary>
-     * Selected statistics about an ETW trace
-     * </summary>
-     */
-    class trace_config {
-    public:
+        const uint32_t buffers_count;
+        const uint32_t buffers_free;
+        const uint32_t buffers_written;
+        const uint32_t buffers_lost;
+        const uint64_t events_total;
+        const uint64_t events_handled;
+        const uint32_t events_lost;
         const uint32_t buffer_size;
         const uint32_t minimum_buffers;
         const uint32_t maximum_buffers;
@@ -71,9 +52,16 @@ namespace krabs {
         const std::wstring log_file_name;
         const std::wstring logger_name;
         const uint32_t flush_threshold;
-        
-        trace_config(const details::trace_info& props)
-            : buffer_size(props.properties.BufferSize)
+
+        trace_stats(uint64_t eventsHandled, details::trace_info& props)
+            : buffers_count(props.properties.NumberOfBuffers)
+            , buffers_free(props.properties.FreeBuffers)
+            , buffers_written(props.properties.BuffersWritten)
+            , buffers_lost(props.properties.RealTimeBuffersLost)
+            , events_total(eventsHandled + props.properties.EventsLost)
+            , events_handled(eventsHandled)
+            , events_lost(props.properties.EventsLost)
+            , buffer_size(props.properties.BufferSize)
             , minimum_buffers(props.properties.MinimumBuffers)
             , maximum_buffers(props.properties.MaximumBuffers)
             , maximum_file_size(props.properties.MaximumFileSize)
@@ -85,7 +73,6 @@ namespace krabs {
             , log_file_name(props.logfileName)
         { }
     };
-
 
     /**
      * <summary>
@@ -329,13 +316,6 @@ namespace krabs {
          * </summary>
          */
         trace_stats query_stats();
-
-        /**
-         * <summary>
-         * Queries the trace session to get the configuration.
-         * </summary>
-         */
-        trace_config query_config();
 
         /**
          * <summary>
@@ -604,14 +584,7 @@ namespace krabs {
     trace_stats trace<T>::query_stats()
     {
         details::trace_manager<trace> manager(*this);
-        return { eventsHandled_, manager.query().properties };
-    }
-
-    template <typename T>
-    trace_config trace<T>::query_config()
-    {
-        details::trace_manager<trace> manager(*this);
-        return { manager.query() };
+        return { eventsHandled_, manager.query() };
     }
 
     template <typename T>

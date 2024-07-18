@@ -196,6 +196,17 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void Close();
 
         /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        /// <example>
+        ///     UserTrace trace = new UserTrace();
+        ///     // ...
+        ///     trace.Start();
+        ///     trace.Stop();
+        /// </example>
+        virtual void Update();
+
+        /// <summary>
         /// Get stats about events handled by this trace
         /// </summary>
         /// <returns>the <see cref="O365::Security::ETW::TraceStats"/> for the current trace object</returns>
@@ -283,6 +294,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     }
 
     inline void UserTrace::Close()
+    {
+        ExecuteAndConvertExceptions(return trace_->close());
+    }
+
+    inline void UserTrace::Update()
     {
         ExecuteAndConvertExceptions(return trace_->close());
     }

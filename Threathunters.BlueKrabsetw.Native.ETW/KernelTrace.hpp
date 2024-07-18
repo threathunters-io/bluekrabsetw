@@ -163,6 +163,16 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// </example>
         virtual void Close();
 
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        /// <example>
+        ///     KernelTrace trace = new KernelTrace();
+        ///     // ...
+        ///     trace.Start();
+        ///     trace.Stop();
+        /// </example>
+        virtual void Update();
 
         /// <summary>
         /// Get stats about events handled by this trace
@@ -265,6 +275,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     inline void KernelTrace::Close ()
     {
         ExecuteAndConvertExceptions(return trace_->close());
+    }
+
+    inline void KernelTrace::Close()
+    {
+        ExecuteAndConvertExceptions(return trace_->update());
     }
 
     inline TraceStats KernelTrace::QueryStats()

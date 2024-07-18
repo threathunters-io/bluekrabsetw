@@ -44,6 +44,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         void Close();
 
         /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        void Update();
+
+        /// <summary>
         /// Get stats about events handled by this trace.
         /// </summary>
         /// <returns>a <see cref="O365::Security::ETW::TraceStats"/> object representing the stats of the current trace</returns>

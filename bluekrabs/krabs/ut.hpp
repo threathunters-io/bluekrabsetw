@@ -63,15 +63,6 @@ namespace krabs { namespace details {
 
         /**
          * <summary>
-         *   todo.
-         * </summary>
-         */
-        static void set_provider_enable_info(
-            const ut::provider_type& provider, 
-            ut::enable_trace_info& info);
-
-        /**
-         * <summary>
          *   Enables the providers that are attached to the given trace.
          * </summary>
          */
@@ -104,16 +95,7 @@ namespace krabs { namespace details {
          */
         static void enable_rundown(
             krabs::trace<krabs::details::ut>& trace);
-
-        /**
-         * <summary>
-         *   Enables the providers that are attached to the given trace.
-         * </summary>
-         */
-        static void enable_trace(
-            krabs::trace<krabs::details::ut>& trace
-            /*const krabs::details::ut::provider_type& p*/);
-
+        
         /**
          * <summary>
          *   Decides to forward an event to any of the providers in the trace.
@@ -157,37 +139,6 @@ namespace krabs { namespace details {
     {
         return 0;
     }
-
-    inline void ut::set_provider_enable_info(
-        const ut::provider_type& provider, 
-        ut::enable_trace_info& info)
-    {
-        info.parameters.ControlFlags = 0;
-        info.parameters.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
-        info.guid = provider.guid_;
-
-        info.level |= provider.level_;
-        info.any |= provider.any_;
-        info.all |= provider.all_;
-        info.rundown_enabled |= provider.rundown_enabled_;
-
-        info.parameters.EnableProperty |= provider.enable_property_;
-
-        // There can only be one descriptor for each filter 
-        // type as specified by the Type member of the 
-        // EVENT_FILTER_DESCRIPTOR structure.
-        if (provider.pre_filter_.count == 0) 
-        {            
-            info.parameters.FilterDescCount = 0;
-            info.parameters.EnableFilterDesc = &info.filter_desc[0];
-        }
-        else
-        {
-            info.parameters.FilterDescCount = provider.pre_filter_.count;
-            info.parameters.EnableFilterDesc = const_cast<EVENT_FILTER_DESCRIPTOR*>(&provider.pre_filter_.descriptor[0]);
-        }                           
-    }
-
     
     inline void ut::enable_providers(
         krabs::trace<krabs::details::ut>& trace)
@@ -250,7 +201,6 @@ namespace krabs { namespace details {
         error_check_common_conditions(status);
     }
 
-
     inline void ut::disable_provider(
         krabs::trace<krabs::details::ut>& trace,
         const krabs::details::ut::provider_type& provider)
@@ -300,43 +250,6 @@ namespace krabs { namespace details {
             error_check_common_conditions(status);
         }
     }
-
-    inline void ut::enable_trace(
-        krabs::trace<krabs::details::ut>& trace
-        /*const krabs::details::ut::provider_type& p*/)
-    {
-        if (trace.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
-            return;
-        }
-    }
-
-
-    //inline void ut::forward_events(
-    //    const EVENT_RECORD& record,
-    //    krabs::trace<krabs::details::ut>& trace)
-    //{            
-    //    krabs::guid guid = record.EventHeader.ProviderId;
-    //    auto& pos = trace.provider_pos_[guid];      
-    //    auto& provider = trace.providers_[pos];
-    //    // for manifest providers, EventHeader.ProviderId is the Provider GUID
-    //    if (record.EventHeader.ProviderId == provider.get().guid_) {                
-    //        provider.get().on_event(record, trace.context_);
-    //        return;
-    //    }
-
-    //    // for MOF providers, EventHeader.Provider is the *Message* GUID
-    //    // we need to ask TDH for event information in order to determine the
-    //    // correct provider to pass this event to
-    //    auto schema = get_event_schema_from_tdh(record);
-    //    auto eventInfo = reinterpret_cast<PTRACE_EVENT_INFO>(schema.get());
-    //    if (eventInfo->ProviderGuid == provider.get().guid_) {               
-    //        provider.get().on_event(record, trace.context_);
-    //        return;
-    //    }
-    //                      
-    //    if (trace.default_callback_ != nullptr)
-    //        trace.default_callback_(record, trace.context_);
-    //}
 
     inline void ut::forward_events(
         const EVENT_RECORD &record,
