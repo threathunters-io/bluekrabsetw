@@ -98,7 +98,7 @@ namespace krabstests
             // we can still query it to determine if a trace with a
             // matching name is running
             krabs::user_trace trace(TEST_TRACE_NAME);
-            while (0 == trace.query_stats().buffersCount) {
+            while (0 == trace.query_stats().buffers_count) {
                 Sleep(500);
             }
 
@@ -110,7 +110,7 @@ namespace krabstests
             CloseHandle(my_thread);
 
             // no buffers --> trace has stopped
-            Assert::IsTrue(0 == trace.query_stats().buffersCount);
+            Assert::IsTrue(0 == trace.query_stats().buffers_count);
         }
 
         TEST_METHOD(should_get_same_trace_flags_as_set)

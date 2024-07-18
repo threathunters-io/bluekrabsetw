@@ -19,7 +19,7 @@ void user_trace_014_transition_trace::start()
 	krabs::user_trace trace(L"test_sense");
 
 	
-	auto config = trace.query_config();
+	auto config = trace.query_stats();
 
 	std::wcout << L"config" << std::endl;
 }

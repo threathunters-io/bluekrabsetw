@@ -34,6 +34,36 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// <summary>count of events lost</summary>
         initonly uint32_t EventsLost;
 
+        /// <summary>count of trace buffers</summary>
+        initonly uint32_t BuffersSize;
+
+        /// <summary>count of free buffers</summary>
+        initonly uint32_t MinimumBuffers;
+
+        /// <summary>count of buffers written</summary>
+        initonly uint32_t MaximumBuffers;
+
+        /// <summary>count of buffers lost</summary>
+        initonly uint32_t MaximumFileSize;
+
+        /// <summary>count of total events</summary>
+        initonly uint32_t LogFileMode;
+
+        /// <summary>count of events handled</summary>
+        initonly uint32_t FlushTimer;
+
+        /// <summary>count of events lost</summary>
+        initonly uint32_t EnableFlags;
+        
+        /// <summary>count of total events</summary>
+        initonly String^ LogFileName;
+
+        /// <summary>count of events handled</summary>
+        initonly String^ LoggerName;
+
+        /// <summary>count of events lost</summary>
+        initonly uint32_t FlushThreshold;
+
     internal:
         TraceStats(const krabs::trace_stats& stats)
             : BuffersCount(stats.buffers_count)
@@ -43,6 +73,16 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
             , EventsTotal(stats.events_total)
             , EventsHandled(stats.events_handled)
             , EventsLost(stats.events_lost)
+            , BuffersSize(stats.buffer_size)
+            , MinimumBuffers(stats.minimum_buffers)
+            , MaximumBuffers(stats.maximum_buffers)
+            , MaximumFileSize(stats.maximum_file_size)
+            , LogFileMode(stats.log_file_mode)
+            , FlushTimer(stats.flush_timer)
+            , EnableFlags(stats.enable_flags)
+            , LogFileName(msclr::interop::marshal_as<String^>(stats.log_file_name))
+            , LoggerName(msclr::interop::marshal_as<String^>(stats.logger_name))
+            , FlushThreshold(stats.flush_threshold)
         { }
     };
 

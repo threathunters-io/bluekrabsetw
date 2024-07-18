@@ -53,7 +53,7 @@ namespace krabs {
         const std::wstring logger_name;
         const uint32_t flush_threshold;
 
-        trace_stats(uint64_t eventsHandled, details::trace_info& props)
+        trace_stats(uint64_t eventsHandled, const details::trace_info& props)
             : buffers_count(props.properties.NumberOfBuffers)
             , buffers_free(props.properties.FreeBuffers)
             , buffers_written(props.properties.BuffersWritten)

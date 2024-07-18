@@ -277,7 +277,7 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         ExecuteAndConvertExceptions(return trace_->close());
     }
 
-    inline void KernelTrace::Close()
+    inline void KernelTrace::Update()
     {
         ExecuteAndConvertExceptions(return trace_->update());
     }
