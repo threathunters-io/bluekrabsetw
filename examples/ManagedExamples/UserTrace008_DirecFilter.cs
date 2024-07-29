@@ -22,33 +22,18 @@ namespace ManagedExamples
             // This is what EnableRundownEvents() does.
             //provider.EnableRundownEvents();
            
-
-
             var f4 = new SystemFlags(0xFFFFFFFFFFFF, 4);
             List<int> ids = new List<int>();
             ids.Add(5);
             var f5 = new EventIds(ids); 
 
-            
-            //var filter3 = new EventIdFilter(5);
             var pre = new PreEventFilter( 
                 f4,
                 f5
             );
             
-            //var directFilter = new DirectEventFilters(filter2, filter3);
-            //var processFilter = new EventFilter(Filter.EventIdIs(5));  // ProcessStart
-            //var directFilter = new DirectEventFilters(tt);
-            
-            //processFilter.OnEvent += ProcessEventHandler;
-            //provider.AddFilter(tt);
-            //provider.AddFilter(processFilter);
-            //provider.AddFilter(directFilter);
             provider.AddFilter(pre);
-            // process rundown events - i.e. running processes
-            //var processRundownFilter = new EventFilter(Filter.EventIdIs(15));  // ProcessRundown
             provider.OnEvent += ProcessEventHandler;
-            //provider.AddFilter(processRundownFilter);
 
             trace.Enable(provider);
             trace.Start();
