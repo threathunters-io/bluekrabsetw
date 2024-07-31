@@ -52,7 +52,7 @@ void user_trace_016_update_provider::start()
 
     trace.enable(provider_power);
     std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
-    trace.disable(provider_power);
+    trace.disable(provider_api);
     std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));    
     trace.stop();
     workerThread.join();

@@ -24,6 +24,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         void SetTraceProperties(EventTraceProperties^ properties);
 
         /// <summary>
+        /// TODO
+        /// </summary>
+        void SetTraceFilename(String^ filename);
+
+        /// <summary>
         /// Starts listening for events from the enabled providers.
         /// </summary>
         void Open();

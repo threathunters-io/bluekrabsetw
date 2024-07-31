@@ -125,6 +125,12 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void SetTraceProperties(EventTraceProperties ^properties);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        virtual void SetTraceFilename(String^ filename);
+
+        /// <summary>
         /// Opens a trace session.
         /// </summary>
         /// <example>
@@ -273,6 +279,12 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         ExecuteAndConvertExceptions(return trace_->set_trace_properties(&_properties));
     }
 
+    inline void UserTrace::SetTraceFilename(String^ filename)
+    {
+        std::wstring nativeName = msclr::interop::marshal_as<std::wstring>(filename);
+        ExecuteAndConvertExceptions(return trace_->set_trace_filename(nativeName));     
+    }
+
     inline void UserTrace::Open()
     {
         ExecuteAndConvertExceptions((void)trace_->open());
@@ -300,7 +312,7 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
 
     inline void UserTrace::Update()
     {
-        ExecuteAndConvertExceptions(return trace_->close());
+        ExecuteAndConvertExceptions(return trace_->update());
     }
 
     inline TraceStats UserTrace::QueryStats()

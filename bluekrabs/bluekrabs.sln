@@ -99,6 +99,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing", "testing", "{9EBF
 		krabs\testing\synth_record.hpp = krabs\testing\synth_record.hpp
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "proxy", "proxy", "{E157A8E6-C44F-4D87-AA59-5D9F0A78820B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -169,6 +171,7 @@ Global
 		{531AF202-7C02-4203-9463-F10DE8A996AD} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
 		{2C63BA17-1E15-4B5B-B979-A00C3A331678} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
 		{9EBF97B2-137A-42F1-830F-E644C9590C33} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
+		{E157A8E6-C44F-4D87-AA59-5D9F0A78820B} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82BAA012-2EF9-4303-A429-CDA3655D5009}
