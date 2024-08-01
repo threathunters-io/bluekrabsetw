@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <krabs/kernel_providers.hpp>
+#include <bluekrabs/kernel_providers.hpp>
 
 namespace Microsoft { namespace O365 { namespace Security { namespace ETW { namespace Kernel {
 

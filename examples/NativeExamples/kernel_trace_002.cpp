@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include "..\..\bluekrabs\krabs.hpp"
-#include "..\..\bluekrabs\krabs\perfinfo_groupmask.hpp"
+#include "..\..\bluekrabs\bluekrabs\perfinfo_groupmask.hpp"
 #include "examples.h"
 
 void kernel_trace_002::start()

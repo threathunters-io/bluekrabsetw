@@ -4,7 +4,7 @@
 #pragma once
 
 #include <krabs.hpp>
-#include <krabs/perfinfo_groupmask.hpp>
+#include <bluekrabs/perfinfo_groupmask.hpp>
 
 #include "EventRecord.hpp"
 #include "EventRecordMetadata.hpp"

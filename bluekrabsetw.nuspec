@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>DeutscheBahn.CSIRT.BlueKrabsetw</id>
-        <version>4.3.2</version>
+        <version>4.4.0</version>
         <title>Krabs ETW Wrappers</title>
         <authors>DeutscheBahn</authors>
         <owners>DeutscheBahn</owners>
@@ -12,50 +12,50 @@
         <description>BlueKrabs ETW provides a modern C++ wrapper around the low-level ETW trace consumption functions</description>
         <summary>BlueKrabs ETW provides a modern C++ wrapper around the low-level ETW trace consumption functions</summary>
         <releaseNotes>
-            Version 4.3.2:
+            Version 4.4.4:
               - Add support for ETL file sources
         </releaseNotes>
         <copyright>© DeutscheBahn Corporation. All rights reserved.</copyright>
         <language />
-        <tags>ETW krabs krabsetw native headers cpp</tags>
+        <tags>ETW bluekrabs bluekrabsetw native headers cpp</tags>
     </metadata>
     <files>
         <file src="build\native\Microsoft.O365.Security.Krabsetw.targets" target="build\native\Microsoft.O365.Security.Krabsetw.targets" />
-        <file src="krabs\krabs\filtering\comparers.hpp" target="lib\native\include\krabs\filtering\comparers.hpp" />
-        <file src="krabs\krabs\filtering\event_filter.hpp" target="lib\native\include\krabs\filtering\event_filter.hpp" />
-        <file src="krabs\krabs\filtering\predicates.hpp" target="lib\native\include\krabs\filtering\predicates.hpp" />
-        <file src="krabs\krabs\filtering\view_adapters.hpp" target="lib\native\include\krabs\filtering\view_adapters.hpp" />
-        <file src="krabs\krabs\testing\event_filter_proxy.hpp" target="lib\native\include\krabs\testing\event_filter_proxy.hpp" />
-        <file src="krabs\krabs\testing\extended_data_builder.hpp" target="lib\native\include\krabs\testing\extended_data_builder.hpp" />
-        <file src="krabs\krabs\testing\filler.hpp" target="lib\native\include\krabs\testing\filler.hpp" />
-        <file src="krabs\krabs\testing\proxy.hpp" target="lib\native\include\krabs\testing\proxy.hpp" />
-        <file src="krabs\krabs\testing\record_builder.hpp" target="lib\native\include\krabs\testing\record_builder.hpp" />
-        <file src="krabs\krabs\testing\record_property_thunk.hpp" target="lib\native\include\krabs\testing\record_property_thunk.hpp" />
-        <file src="krabs\krabs\testing\synth_record.hpp" target="lib\native\include\krabs\testing\synth_record.hpp" />
-        <file src="krabs\krabs\client.hpp" target="lib\native\include\krabs\client.hpp" />
-        <file src="krabs\krabs\collection_view.hpp" target="lib\native\include\krabs\collection_view.hpp" />
-        <file src="krabs\krabs\compiler_check.hpp" target="lib\native\include\krabs\compiler_check.hpp" />
-        <file src="krabs\krabs\errors.hpp" target="lib\native\include\krabs\errors.hpp" />
-        <file src="krabs\krabs\etw.hpp" target="lib\native\include\krabs\etw.hpp" />
-        <file src="krabs\krabs\guid.hpp" target="lib\native\include\krabs\guid.hpp" />
-        <file src="krabs\krabs\kernel_guids.hpp" target="lib\native\include\krabs\kernel_guids.hpp" />
-        <file src="krabs\krabs\kernel_providers.hpp" target="lib\native\include\krabs\kernel_providers.hpp" />
-        <file src="krabs\krabs\kt.hpp" target="lib\native\include\krabs\kt.hpp" />
-        <file src="krabs\krabs\parser.hpp" target="lib\native\include\krabs\parser.hpp" />
-        <file src="krabs\krabs\parse_types.hpp" target="lib\native\include\krabs\parse_types.hpp" />
-        <file src="krabs\krabs\perfinfo_groupmask.hpp" target="lib\native\include\krabs\perfinfo_groupmask.hpp" />
-        <file src="krabs\krabs\property.hpp" target="lib\native\include\krabs\property.hpp" />
-        <file src="krabs\krabs\provider.hpp" target="lib\native\include\krabs\provider.hpp" />
-        <file src="krabs\krabs\schema.hpp" target="lib\native\include\krabs\schema.hpp" />
-        <file src="krabs\krabs\schema_locator.hpp" target="lib\native\include\krabs\schema_locator.hpp" />
-        <file src="krabs\krabs\size_provider.hpp" target="lib\native\include\krabs\size_provider.hpp" />
-        <file src="krabs\krabs\tdh_helpers.hpp" target="lib\native\include\krabs\tdh_helpers.hpp" />
-        <file src="krabs\krabs\trace.hpp" target="lib\native\include\krabs\trace.hpp" />
-        <file src="krabs\krabs\trace_context.hpp" target="lib\native\include\krabs\trace_context.hpp" />
-        <file src="krabs\krabs\ut.hpp" target="lib\native\include\krabs\ut.hpp" />
-        <file src="krabs\krabs\version_helpers.hpp" target="lib\native\include\krabs\version_helpers.hpp" />
-        <file src="krabs\krabs\wstring_convert.hpp" target="lib\native\include\krabs\wstring_convert.hpp" />
-        <file src="krabs\krabs.hpp" target="lib\native\include\krabs.hpp" />
-        <file src="krabs\Readme.md" target="Readme.md" />
+        <file src="bluekrabs\bluekrabs\filtering\comparers.hpp" target="lib\native\include\bluekrabs\filtering\comparers.hpp" />
+        <file src="bluekrabs\bluekrabs\filtering\event_filter.hpp" target="lib\native\include\bluekrabs\filtering\event_filter.hpp" />
+        <file src="bluekrabs\bluekrabs\filtering\predicates.hpp" target="lib\native\include\bluekrabs\filtering\predicates.hpp" />
+        <file src="bluekrabs\bluekrabs\filtering\view_adapters.hpp" target="lib\native\include\bluekrabs\filtering\view_adapters.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\event_filter_proxy.hpp" target="lib\native\include\bluekrabs\testing\event_filter_proxy.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\extended_data_builder.hpp" target="lib\native\include\bluekrabs\testing\extended_data_builder.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\filler.hpp" target="lib\native\include\bluekrabs\testing\filler.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\proxy.hpp" target="lib\native\include\bluekrabs\testing\proxy.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\record_builder.hpp" target="lib\native\include\bluekrabs\testing\record_builder.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\record_property_thunk.hpp" target="lib\native\include\bluekrabs\testing\record_property_thunk.hpp" />
+        <file src="bluekrabs\bluekrabs\testing\synth_record.hpp" target="lib\native\include\bluekrabs\testing\synth_record.hpp" />
+        <file src="bluekrabs\bluekrabs\client.hpp" target="lib\native\include\bluekrabs\client.hpp" />
+        <file src="bluekrabs\bluekrabs\collection_view.hpp" target="lib\native\include\bluekrabs\collection_view.hpp" />
+        <file src="bluekrabs\bluekrabs\compiler_check.hpp" target="lib\native\include\bluekrabs\compiler_check.hpp" />
+        <file src="bluekrabs\bluekrabs\errors.hpp" target="lib\native\include\bluekrabs\errors.hpp" />
+        <file src="bluekrabs\bluekrabs\etw.hpp" target="lib\native\include\bluekrabs\etw.hpp" />
+        <file src="bluekrabs\bluekrabs\guid.hpp" target="lib\native\include\bluekrabs\guid.hpp" />
+        <file src="bluekrabs\bluekrabs\kernel_guids.hpp" target="lib\native\include\bluekrabs\kernel_guids.hpp" />
+        <file src="bluekrabs\bluekrabs\kernel_providers.hpp" target="lib\native\include\bluekrabs\kernel_providers.hpp" />
+        <file src="bluekrabs\bluekrabs\kt.hpp" target="lib\native\include\bluekrabs\kt.hpp" />
+        <file src="bluekrabs\bluekrabs\parser.hpp" target="lib\native\include\bluekrabs\parser.hpp" />
+        <file src="bluekrabs\bluekrabs\parse_types.hpp" target="lib\native\include\bluekrabs\parse_types.hpp" />
+        <file src="bluekrabs\bluekrabs\perfinfo_groupmask.hpp" target="lib\native\include\bluekrabs\perfinfo_groupmask.hpp" />
+        <file src="bluekrabs\bluekrabs\property.hpp" target="lib\native\include\bluekrabs\property.hpp" />
+        <file src="bluekrabs\bluekrabs\provider.hpp" target="lib\native\include\bluekrabs\provider.hpp" />
+        <file src="bluekrabs\bluekrabs\schema.hpp" target="lib\native\include\bluekrabs\schema.hpp" />
+        <file src="bluekrabs\bluekrabs\schema_locator.hpp" target="lib\native\include\bluekrabs\schema_locator.hpp" />
+        <file src="bluekrabs\bluekrabs\size_provider.hpp" target="lib\native\include\bluekrabs\size_provider.hpp" />
+        <file src="bluekrabs\bluekrabs\tdh_helpers.hpp" target="lib\native\include\bluekrabs\tdh_helpers.hpp" />
+        <file src="bluekrabs\bluekrabs\trace.hpp" target="lib\native\include\bluekrabs\trace.hpp" />
+        <file src="bluekrabs\bluekrabs\trace_context.hpp" target="lib\native\include\bluekrabs\trace_context.hpp" />
+        <file src="bluekrabs\bluekrabs\ut.hpp" target="lib\native\include\bluekrabs\ut.hpp" />
+        <file src="bluekrabs\bluekrabs\version_helpers.hpp" target="lib\native\include\bluekrabs\version_helpers.hpp" />
+        <file src="bluekrabs\bluekrabs\wstring_convert.hpp" target="lib\native\include\bluekrabs\wstring_convert.hpp" />
+        <file src="bluekrabs\krabs.hpp" target="lib\native\include\krabs.hpp" />
+        <file src="bluekrabs\Readme.md" target="Readme.md" />
     </files>
 </package>
