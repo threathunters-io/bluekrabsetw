@@ -10,7 +10,7 @@
 #include "Guid.hpp"
 #include "NativePtr.hpp"
 #include "Filtering/EventFilter.hpp"
-#include "Filtering/DirectEventFilter.hpp"
+#include "Filtering/PreEventfilter.hpp"
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
@@ -18,7 +18,7 @@ using namespace System::Runtime::InteropServices;
 namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
 
     ref class UserTrace;
-
+    
     // Flags as documented here:
     //  https://msdn.microsoft.com/en-us/library/windows/desktop/dd392306(v=vs.85).aspx
     public enum class TraceFlags
@@ -173,11 +173,7 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
             provider_->add_filter(filter);
         }
 
-        /// <summary>
-        /// Adds a new EventFilter to the provider.
-        /// </summary>
-        /// <param name="filter">the <see cref="O365::Security::ETW::EventFilter"/> to add</param>
-        void AddFilter(O365::Security::ETW::DirectEventFilters^ filter) {
+        void AddFilter(O365::Security::ETW::PreEventFilter^ filter) {
             provider_->add_filter(filter);
         }
 

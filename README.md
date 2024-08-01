@@ -1,16 +1,30 @@
 
 Overview
-========
-
+==============
 **bluekrabsetw** is a C++ library that simplifies interacting with ETW. It allows for any number of traces and providers to be enabled and for client code to register for event notifications from these traces. **bluekrabsetw** originates from the **krabsetw** c++ library and seeks to improve and include capabilities that have not yet been included in the former library.
 
 **bluekrabsetw** also provides code to simplify parsing generic event data into strongly typed data types. 
 
 **Threathunters.BlueKrabsetw.Native.ETW** is a C++ CLI (.NET) wrapper around **bluekrabsetw**. It provides the same functionality as bluekrabsetw to .NET applications.
 
-Examples & Documentation
-========
+> ### Additional Capabilities
+> The following capabilities have been integrated into the solution alongside the original krabsetw C++ library:
+> * **Provider Enhanced Runtime Capabilities**:
+>    * Supports enabling and disabling providers dynamically to adapt to changing requirements. This includes: Provider Addition, Removal, and Update Functionality
+>  
+> * **Session Enhanced Runtime Capabilities**:
+>    * todo
+>          
+> * **Decoupling of Functionality to Allow Better Control of Sessions**:
+>    * Provides improved modularity and flexibility, making it easier to manage and control Sessions.
+>
+> * **Improved Pre-Filtering Mechanisms**:
+>    * Optimizes data processing by allowing more efficient filtering before data is collected.
+>
+> These enhancements extend the core features of the original krabsetw C++ library, providing a more robust and flexible solution.
 
+Examples & Documentation
+==============
 * An [ETW Primer](docs/EtwPrimer.md).
 * Simple examples can be found in the `examples` folder.
 * Please refer to [KrabsExample.md](docs/KrabsExample.md) and [LobstersExample.md](docs/LobstersExample.md) for detailed examples.

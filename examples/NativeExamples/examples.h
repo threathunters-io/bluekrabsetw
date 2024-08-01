@@ -66,6 +66,7 @@ struct user_trace_006_predicate_vectors
 struct user_trace_007_rundown
 {
     static void start();
+    static void start2();
 };
 
 struct user_trace_008_stacktrace
@@ -76,6 +77,7 @@ struct user_trace_008_stacktrace
 struct user_trace_009_from_file
 {
     static void start();
+    static void start2();
 };
 
 struct user_trace_010_direct_filter
@@ -94,6 +96,21 @@ struct user_trace_012_open_trace
 };
 
 struct user_trace_013_pktmon
+{
+    static void start();
+};
+
+struct user_trace_014_transition_trace
+{
+    static void start();
+};
+
+struct user_trace_015_update_trace
+{
+    static void start();
+};
+
+struct user_trace_016_update_provider
 {
     static void start();
 };

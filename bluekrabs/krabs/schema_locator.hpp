@@ -149,15 +149,17 @@ namespace krabs {
         // allocate and fill the schema from TDH
         auto buffer = std::unique_ptr<char[]>(new char[bufferSize]);
 
-        error_check_common_conditions(
-            TdhGetEventInformation(
+        status = TdhGetEventInformation(
             (PEVENT_RECORD)&record,
             0,
             NULL,
             (PTRACE_EVENT_INFO)buffer.get(),
-            &bufferSize),
-            record);
-
+            &bufferSize);
+        
+        if (status != ERROR_SUCCESS) {
+            error_check_common_conditions(status, record);
+        }
+       
         return buffer;
     }
 }

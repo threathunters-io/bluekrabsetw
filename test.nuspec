@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>first_test_nuget</id>
+        <version>4.3.7</version>
+        <title>BlueKrabsetw.Native.ETW - managed wrappers for BlueKrabsetw</title>
+        <authors>non</authors>
+        <owners>non</owners>
+        <license type="expression">MIT</license>
+        <projectUrl>https://github.com/threathunters-io/bluekrabsetw</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>BlueKrabsetw.Native.ETW is a managed wrapper around the BlueKrabsetw ETW library.</description>
+        <summary>BlueKrabsetw.Native.ETW is a managed wrapper around the BlueKrabsetw ETW library. It originates from the Microsoft.O365.Security.Native.ETW library and seeks to improve and include capabilities that have not yet been included in the former library.</summary>
+        <releaseNotes>
+            Version 4.3.7:
+              - Downgrade to .NET version 4.7.2
+        </releaseNotes>
+        <copyright>non</copyright>
+        <language />
+        <tags>ETW krabs managed cppcli</tags>
+        <dependencies>
+            <group targetFramework=".NETFramework4.7.2" />
+            <group targetFramework="net6.0" />
+        </dependencies>
+    </metadata>
+
+    <files>
+        <file src="bluekrabs\x64\Release\net472\Threathunters.BlueKrabsetw.Native.ETW.dll" target="lib\net472\Threathunters.BlueKrabsetw.Native.ETW.dll" />
+        <file src="bluekrabs\x64\Release\net472\Threathunters.BlueKrabsetw.Native.ETW.pdb" target="lib\net472\Threathunters.BlueKrabsetw.Native.ETW.pdb" />
+        <file src="bluekrabs\x64\Release\net472\Threathunters.BlueKrabsetw.Native.ETW.xml" target="lib\net472\Threathunters.BlueKrabsetw.Native.ETW.xml" />
+        <file src="bluekrabs\x64\Release\net6.0\Microsoft.O365.Security.Native.ETW.dll" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.dll" />
+        <file src="bluekrabs\x64\Release\net6.0\Microsoft.O365.Security.Native.ETW.pdb" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.pdb" />
+        <file src="bluekrabs\x64\Release\net6.0\Microsoft.O365.Security.Native.ETW.xml" target="lib\net6.0\Microsoft.O365.Security.Native.ETW.xml" />
+        <file src="bluekrabs\x64\Release\net6.0\Ijwhost.dll" target="runtimes\win-x64\native\Ijwhost.dll" />
+    </files>
+</package>

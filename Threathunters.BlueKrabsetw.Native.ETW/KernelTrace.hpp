@@ -93,6 +93,12 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void SetTraceProperties(EventTraceProperties^ properties);
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filename"></param>
+        virtual void SetTraceFilename(String^ filename);
+
+        /// <summary>
         /// Opens a trace session.
         /// </summary>
         /// <example>
@@ -151,6 +157,28 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         ///     trace.Stop();
         /// </example>
         virtual void Stop();
+
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        /// <example>
+        ///     KernelTrace trace = new KernelTrace();
+        ///     // ...
+        ///     trace.Start();
+        ///     trace.Stop();
+        /// </example>
+        virtual void Close();
+
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        /// <example>
+        ///     KernelTrace trace = new KernelTrace();
+        ///     // ...
+        ///     trace.Start();
+        ///     trace.Stop();
+        /// </example>
+        virtual void Update();
 
         /// <summary>
         /// Get stats about events handled by this trace
@@ -230,6 +258,12 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         ExecuteAndConvertExceptions(return trace_->set_trace_properties(&_properties));
     }
 
+    inline void KernelTrace::SetTraceFilename(String^ filename)
+    {
+        std::wstring nativeName = msclr::interop::marshal_as<std::wstring>(filename);
+        ExecuteAndConvertExceptions(return trace_->set_trace_filename(nativeName));
+    }
+
     inline void KernelTrace::Open()
     {
         ExecuteAndConvertExceptions((void)trace_->open());
@@ -248,6 +282,16 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     inline void KernelTrace::Stop()
     {
         ExecuteAndConvertExceptions(return trace_->stop());
+    }
+
+    inline void KernelTrace::Close ()
+    {
+        ExecuteAndConvertExceptions(return trace_->close());
+    }
+
+    inline void KernelTrace::Update()
+    {
+        ExecuteAndConvertExceptions(return trace_->update());
     }
 
     inline TraceStats KernelTrace::QueryStats()

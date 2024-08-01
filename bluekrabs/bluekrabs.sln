@@ -20,19 +20,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		MTA.testsettings = MTA.testsettings
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "krabs headers", "krabs headers", "{1FD19105-D67C-492B-B98F-53E00A324269}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtwTestsCS", "..\tests\ManagedETWTests\EtwTestsCS.csproj", "{600CFE03-FD84-4323-9439-839D81C31972}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C4AB7F5F-2FB3-4C16-A1F3-F6700C655B02}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{2E00634C-7E8B-4656-9505-78FF2F5D0EDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedExamples", "..\examples\ManagedExamples\ManagedExamples.csproj", "{32E71DD0-D11A-44DE-8CA8-572995AF2373}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeExamples", "..\examples\NativeExamples\NativeExamples.vcxproj", "{D31B1A4B-8282-4AED-99FC-9AA5974B9134}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ED4E6027-541F-440A-A5EE-15DBB7B89423} = {ED4E6027-541F-440A-A5EE-15DBB7B89423}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Threathunters.BlueKrabsetw.Native.ETW.NetCore", "..\Threathunters.BlueKrabsetw.Native.ETW.NetCore\Microsoft.O365.Security.Native.ETW.NetCore.vcxproj", "{9DE6788C-5759-4A75-B484-ABA4C7EF5F08}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bluekrabs headers", "bluekrabs headers", "{60104949-C1E9-45B1-A37A-2A0EE5F94E1B}"
 	ProjectSection(SolutionItems) = preProject
 		krabs.hpp = krabs.hpp
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "krabs", "krabs", "{371361C8-96EC-4D6D-B80B-2E47E3453264}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bluekrabs", "bluekrabs", "{6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}"
 	ProjectSection(SolutionItems) = preProject
 		krabs\client.hpp = krabs\client.hpp
 		krabs\collection_view.hpp = krabs\collection_view.hpp
 		krabs\compiler_check.hpp = krabs\compiler_check.hpp
 		krabs\errors.hpp = krabs\errors.hpp
 		krabs\etw.hpp = krabs\etw.hpp
-		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
 		krabs\guid.hpp = krabs\guid.hpp
 		krabs\kernel_guids.hpp = krabs\kernel_guids.hpp
 		krabs\kernel_providers.hpp = krabs\kernel_providers.hpp
@@ -53,16 +67,28 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "krabs", "krabs", "{371361C8
 		krabs\wstring_convert.hpp = krabs\wstring_convert.hpp
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "filtering", "filtering", "{96FA58B5-A1F6-4107-9FB4-226290F9D696}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "filtering", "filtering", "{DE5DA5AA-BA9F-4D07-AF37-E1CE1487217C}"
 	ProjectSection(SolutionItems) = preProject
 		krabs\filtering\comparers.hpp = krabs\filtering\comparers.hpp
-		krabs\filtering\direct_event_filter.hpp = krabs\filtering\direct_event_filter.hpp
 		krabs\filtering\event_filter.hpp = krabs\filtering\event_filter.hpp
+		krabs\filtering\post_event_filter.hpp = krabs\filtering\post_event_filter.hpp
 		krabs\filtering\predicates.hpp = krabs\filtering\predicates.hpp
+		krabs\filtering\pre_event_filter.hpp = krabs\filtering\pre_event_filter.hpp
 		krabs\filtering\view_adapters.hpp = krabs\filtering\view_adapters.hpp
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing", "testing", "{9ED1AE76-2EAA-4CCF-8F01-458BDC8BCD53}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "helping", "helping", "{531AF202-7C02-4203-9463-F10DE8A996AD}"
+	ProjectSection(SolutionItems) = preProject
+		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "searching", "searching", "{2C63BA17-1E15-4B5B-B979-A00C3A331678}"
+	ProjectSection(SolutionItems) = preProject
+		discover.hpp = discover.hpp
+		krabs\searching\wevt.hpp = krabs\searching\wevt.hpp
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing", "testing", "{9EBF97B2-137A-42F1-830F-E644C9590C33}"
 	ProjectSection(SolutionItems) = preProject
 		krabs\testing\event_filter_proxy.hpp = krabs\testing\event_filter_proxy.hpp
 		krabs\testing\extended_data_builder.hpp = krabs\testing\extended_data_builder.hpp
@@ -73,31 +99,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testing", "testing", "{9ED1
 		krabs\testing\synth_record.hpp = krabs\testing\synth_record.hpp
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtwTestsCS", "..\tests\ManagedETWTests\EtwTestsCS.csproj", "{600CFE03-FD84-4323-9439-839D81C31972}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C4AB7F5F-2FB3-4C16-A1F3-F6700C655B02}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{2E00634C-7E8B-4656-9505-78FF2F5D0EDD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedExamples", "..\examples\ManagedExamples\ManagedExamples.csproj", "{32E71DD0-D11A-44DE-8CA8-572995AF2373}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NativeExamples", "..\examples\NativeExamples\NativeExamples.vcxproj", "{D31B1A4B-8282-4AED-99FC-9AA5974B9134}"
-	ProjectSection(ProjectDependencies) = postProject
-		{ED4E6027-541F-440A-A5EE-15DBB7B89423} = {ED4E6027-541F-440A-A5EE-15DBB7B89423}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Threathunters.BlueKrabsetw.Native.ETW.NetCore", "..\Threathunters.BlueKrabsetw.Native.ETW.NetCore\Microsoft.O365.Security.Native.ETW.NetCore.vcxproj", "{9DE6788C-5759-4A75-B484-ABA4C7EF5F08}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "searching", "searching", "{03BCA2C2-F363-45B0-8745-E193BFBD54C5}"
-	ProjectSection(SolutionItems) = preProject
-		discover.hpp = discover.hpp
-		krabs\searching\wevt.hpp = krabs\searching\wevt.hpp
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "helping", "helping", "{40378D85-BA5E-4FA1-A450-44BFA680B203}"
-	ProjectSection(SolutionItems) = preProject
-		krabs\helping\file_mapping.hpp = krabs\helping\file_mapping.hpp
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "proxy", "proxy", "{E157A8E6-C44F-4D87-AA59-5D9F0A78820B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -161,14 +163,15 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{880977B8-15CA-421B-BF48-D01626A530A2} = {C4AB7F5F-2FB3-4C16-A1F3-F6700C655B02}
-		{371361C8-96EC-4D6D-B80B-2E47E3453264} = {1FD19105-D67C-492B-B98F-53E00A324269}
-		{96FA58B5-A1F6-4107-9FB4-226290F9D696} = {371361C8-96EC-4D6D-B80B-2E47E3453264}
-		{9ED1AE76-2EAA-4CCF-8F01-458BDC8BCD53} = {371361C8-96EC-4D6D-B80B-2E47E3453264}
 		{600CFE03-FD84-4323-9439-839D81C31972} = {C4AB7F5F-2FB3-4C16-A1F3-F6700C655B02}
 		{32E71DD0-D11A-44DE-8CA8-572995AF2373} = {2E00634C-7E8B-4656-9505-78FF2F5D0EDD}
 		{D31B1A4B-8282-4AED-99FC-9AA5974B9134} = {2E00634C-7E8B-4656-9505-78FF2F5D0EDD}
-		{03BCA2C2-F363-45B0-8745-E193BFBD54C5} = {371361C8-96EC-4D6D-B80B-2E47E3453264}
-		{40378D85-BA5E-4FA1-A450-44BFA680B203} = {371361C8-96EC-4D6D-B80B-2E47E3453264}
+		{6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC} = {60104949-C1E9-45B1-A37A-2A0EE5F94E1B}
+		{DE5DA5AA-BA9F-4D07-AF37-E1CE1487217C} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
+		{531AF202-7C02-4203-9463-F10DE8A996AD} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
+		{2C63BA17-1E15-4B5B-B979-A00C3A331678} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
+		{9EBF97B2-137A-42F1-830F-E644C9590C33} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
+		{E157A8E6-C44F-4D87-AA59-5D9F0A78820B} = {6345EFAF-43BD-42DE-9B8D-8D955E0C1FDC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {82BAA012-2EF9-4303-A429-CDA3655D5009}

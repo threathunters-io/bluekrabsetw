@@ -4,6 +4,8 @@
 #pragma once
 
 #include <deque>
+#include <map>
+#include <mutex>
 
 #include "compiler_check.hpp"
 #include "guid.hpp"
@@ -31,25 +33,44 @@ namespace krabs {
      * Selected statistics about an ETW trace
      * </summary>
      */
-    class trace_stats
-    {
+    class trace_stats {
     public:
-        const uint32_t buffersCount;
-        const uint32_t buffersFree;
-        const uint32_t buffersWritten;
-        const uint32_t buffersLost;
-        const uint64_t eventsTotal;
-        const uint64_t eventsHandled;
-        const uint32_t eventsLost;
+        const uint32_t buffers_count;
+        const uint32_t buffers_free;
+        const uint32_t buffers_written;
+        const uint32_t buffers_lost;
+        const uint64_t events_total;
+        const uint64_t events_handled;
+        const uint32_t events_lost;
+        const uint32_t buffer_size;
+        const uint32_t minimum_buffers;
+        const uint32_t maximum_buffers;
+        const uint32_t maximum_file_size;
+        const uint32_t log_file_mode;
+        const uint32_t flush_timer;
+        const uint32_t enable_flags;
+        const std::wstring log_file_name;
+        const std::wstring logger_name;
+        const uint32_t flush_threshold;
 
-        trace_stats(uint64_t eventsHandled, const EVENT_TRACE_PROPERTIES& props)
-            : buffersCount(props.NumberOfBuffers)
-            , buffersFree(props.FreeBuffers)
-            , buffersWritten(props.BuffersWritten)
-            , buffersLost(props.RealTimeBuffersLost)
-            , eventsTotal(eventsHandled + props.EventsLost)
-            , eventsHandled(eventsHandled)
-            , eventsLost(props.EventsLost)
+        trace_stats(uint64_t eventsHandled, const details::trace_info& props)
+            : buffers_count(props.properties.NumberOfBuffers)
+            , buffers_free(props.properties.FreeBuffers)
+            , buffers_written(props.properties.BuffersWritten)
+            , buffers_lost(props.properties.RealTimeBuffersLost)
+            , events_total(eventsHandled + props.properties.EventsLost)
+            , events_handled(eventsHandled)
+            , events_lost(props.properties.EventsLost)
+            , buffer_size(props.properties.BufferSize)
+            , minimum_buffers(props.properties.MinimumBuffers)
+            , maximum_buffers(props.properties.MaximumBuffers)
+            , maximum_file_size(props.properties.MaximumFileSize)
+            , log_file_mode(props.properties.LogFileMode)
+            , flush_timer(props.properties.FlushTimer)
+            , enable_flags(props.properties.EnableFlags)
+            , flush_threshold(props.properties.FlushThreshold)
+            , logger_name(props.traceName)
+            , log_file_name(props.logfileName)
         { }
     };
 
@@ -166,7 +187,22 @@ namespace krabs {
 
         /**
          * <summary>
-         * Enables the provider on the given user trace.
+         * Update the session configuration so that the session receives
+         * the requested events from the provider.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
+         *    provider<> powershell(id);
+         *    trace.enable(powershell);
+         * </example>
+         */
+        void update();
+
+        /**
+         * <summary>
+         * Update the session configuration so that the session receives
+         * the requested events from the provider. 
          * </summary>
          * <example>
          *    krabs::trace trace;
@@ -176,6 +212,20 @@ namespace krabs {
          * </example>
          */
         void enable(const typename T::provider_type &p);
+
+        /**
+         * <summary>
+         * Update the session configuration so that the session does not
+         * receive events from the provider.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
+         *    provider<> powershell(id);
+         *    trace.disable(powershell);
+         * </example>
+         */
+        void disable(const typename T::provider_type& p);
 
         /**
          * <summary>
@@ -204,7 +254,22 @@ namespace krabs {
          *    trace.stop();
          * </example>
          */
-        void stop();
+        void stop(bool force = false);
+
+        /**
+         * <summary>
+         * Closes a trace session.
+         * </summary>
+         * <example>
+         *    krabs::trace trace;
+         *    krabs::guid id(L"{A0C1853B-5C40-4B15-8766-3CF1C58F985A}");
+         *    provider<> powershell(id);
+         *    trace.enable(powershell);
+         *    trace.start();
+         *    trace.stop();
+         * </example>
+         */
+        void close();
 
         /**
         * <summary>
@@ -221,6 +286,13 @@ namespace krabs {
         * </example>
         */
         EVENT_TRACE_LOGFILE open();
+
+        /**
+         * <summary>
+         * Transition the ETW trace from real-time to file or vice versa.
+         * </summary>
+         */
+        void transition();
 
         /**
         * <summary>
@@ -291,11 +363,27 @@ namespace krabs {
          */
         void on_event(const EVENT_RECORD &);
 
+        /////**
+        //// * <summary>
+        //// * Updates a trace session.
+        //// * </summary>
+        //// * <example>
+        //// *    todo
+        //// * </example>
+        //// */
+        //void update_provider(const typename T::provider_type& p);
+
     private:
         std::wstring name_;
         std::wstring logFilename_;
         bool non_stoppable_;
-        std::deque<std::reference_wrapper<const typename T::provider_type>> providers_;
+        std::deque<std::reference_wrapper<const typename T::provider_type>> enabled_providers_;
+        // This essentially takes the union of all the provider flags
+        // for a given provider. This comes about when multiple providers
+        // for the same XX are provided and request different provider flags.
+        // TODO: Only forward the calls that are requested to each provider.
+        typename T::provider_enable_info provider_enable_info_;
+        std::mutex providers_mutex_;
 
         TRACEHANDLE registrationHandle_;
         TRACEHANDLE sessionHandle_;
@@ -354,11 +442,15 @@ namespace krabs {
         if (!non_stoppable_) {
             stop();
         }
+        else {
+            close();
+        }
     }
 
     template <typename T>
     void trace<T>::set_trace_properties(const PEVENT_TRACE_PROPERTIES properties)
     {
+        properties_ = {};
         properties_.BufferSize = properties->BufferSize;
         properties_.MinimumBuffers = properties->MinimumBuffers;
         properties_.MaximumBuffers = properties->MaximumBuffers;
@@ -386,29 +478,75 @@ namespace krabs {
     void trace<T>::on_event(const EVENT_RECORD &record)
     {
         ++eventsHandled_;
+        std::lock_guard<std::mutex> lock(providers_mutex_);
         T::forward_events(record, *this);
     }
 
     template <typename T>
-    void trace<T>::enable(const typename T::provider_type &p)
-    {
-        providers_.push_back(std::ref(p));
+    void trace<T>::enable(const typename T::provider_type& p)
+    {                    
+        auto insert_unique = [&](const auto& _p) {
+            auto it = std::find_if(enabled_providers_.begin(), enabled_providers_.end(), [&_p](const auto& x) {
+                return x.get().guid() == _p.guid();
+                });
+            if (it == enabled_providers_.end()) {
+                enabled_providers_.push_back(std::ref(_p));
+            }
+            else {
+                *it = std::ref(_p);
+            }
+        };
+
+        if (registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            insert_unique(p);
+        }
+        else {        
+            std::lock_guard<std::mutex> lock(providers_mutex_);
+            details::trace_manager<trace> manager(*this);
+            manager.enable(p);
+            insert_unique(p);
+        }                                                                         
+    }
+
+    template <typename T>
+    void trace<T>::disable(const typename T::provider_type& p)
+    {   
+        if (registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            auto it = std::find_if(enabled_providers_.begin(), enabled_providers_.end(), [&p](const auto& x) {
+                return x.get().guid() == p.guid();
+                });
+
+            if (it != enabled_providers_.end()) {
+                std::lock_guard<std::mutex> lock(providers_mutex_);
+                details::trace_manager<trace> manager(*this);
+                manager.disable(p);
+                enabled_providers_.erase(it);
+            }
+        }
     }
 
     template <typename T>
     void trace<T>::start()
     {
         eventsHandled_ = 0;
-
         details::trace_manager<trace> manager(*this);
         manager.start();
     }
 
     template <typename T>
-    void trace<T>::stop()
+    void trace<T>::stop(bool force)
+    {
+        if (!non_stoppable_ || force) {
+            details::trace_manager<trace> manager(*this);
+            manager.stop();
+        }        
+    }
+
+    template <typename T>
+    void trace<T>::close()
     {
         details::trace_manager<trace> manager(*this);
-        manager.stop();
+        manager.close();
     }
 
     template <typename T>
@@ -421,12 +559,25 @@ namespace krabs {
     }
 
     template <typename T>
+    void trace<T>::transition()
+    {
+        return;
+    }
+
+    template <typename T>
     void trace<T>::process()
     {
         eventsHandled_ = 0;
 
         details::trace_manager<trace> manager(*this);
         manager.process();
+    }
+
+    template <typename T>
+    void trace<T>::update()
+    {
+        details::trace_manager<trace> manager(*this);
+        manager.update();
     }
 
     template <typename T>

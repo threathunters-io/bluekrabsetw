@@ -212,10 +212,10 @@
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\EventTraceProperties.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\AnsiString.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\CountedString.hpp" />
-    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\DirectEventFilter.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\EventFilter.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\Fluent.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\Predicate.hpp" />
+    <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\PreEventfilter.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Filtering\UnicodeString.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\Guid.hpp" />
     <ClInclude Include="..\Threathunters.BlueKrabsetw.Native.ETW\IEventRecord.hpp" />

@@ -71,6 +71,15 @@ namespace krabs { namespace details {
         void stop();
 
         /**
+         * <summary>
+         * Close the ETW trace identified by the info in the trace type.
+         * In conjunction with stopping, closing detaches a consumer
+         * from an active trace session but does not terminate the session.
+         * </summary>
+         */
+        void close();
+
+        /**
         * <summary>
         * Opens the ETW trace identified by the info in the trace type.
         * </summary>
@@ -86,18 +95,42 @@ namespace krabs { namespace details {
         void process();
 
         /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
+        void disable(const typename T::trace_type::provider_type& p);
+
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
+        void enable(const typename T::trace_type::provider_type& p);
+
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
+        void update();
+      
+        /**
          * <summary>
          * Queries the ETW trace identified by the info in the trace type.
          * </summary>
          */
-        EVENT_TRACE_PROPERTIES query();
+        trace_info query();
 
         /**
          * <summary>
          * Queries the ETW trace identified by the info in the trace type v2.
          * </summary>
          */
-        EVENT_TRACE_PROPERTIES_V2 query_v2();
+        trace_info_v2 query_v2();
 
         /**
          * <summary>
@@ -125,17 +158,21 @@ namespace krabs { namespace details {
         void on_event(const EVENT_RECORD &record);
 
     private:
+        trace_info fill_trace_update_info();
         trace_info fill_trace_info();
         trace_info_v2 fill_trace_info_v2();
-        EVENT_TRACE_LOGFILE fill_logfile();
-        void close_trace();
+        EVENT_TRACE_LOGFILE fill_logfile();              
         void register_trace();
-        EVENT_TRACE_PROPERTIES query_trace();
-        EVENT_TRACE_PROPERTIES_V2 query_trace_v2();
         void stop_trace();
         EVENT_TRACE_LOGFILE open_trace();
+        void close_trace();
+        void update_trace();
+        trace_info query_trace();
+        trace_info_v2 query_trace_v2();
         void process_trace();
         void enable_providers();
+        void disable_provider(const typename T::trace_type::provider_type& p);
+        void enable_provider(const typename T::trace_type::provider_type& p);
 
     private:
         T &trace_;
@@ -156,7 +193,8 @@ namespace krabs { namespace details {
      * </remarks>
      */
     template <typename T>
-    static void __stdcall trace_callback_thunk(EVENT_RECORD *pRecord)
+    static void __stdcall trace_callback_thunk(
+        EVENT_RECORD *pRecord)
     {
         auto *pUserTrace = (T*)(pRecord->UserContext);
         trace_manager<T> trace(*pUserTrace);
@@ -176,7 +214,8 @@ namespace krabs { namespace details {
      * </remarks>
      */
     template <typename T>
-    static ULONG __stdcall trace_buffer_callback(EVENT_TRACE_LOGFILE *pLogFile)
+    static ULONG __stdcall trace_buffer_callback(
+        EVENT_TRACE_LOGFILE *pLogFile)
     {
         auto *pTrace = (T*)(pLogFile->Context);
         trace_manager<T> trace(*pTrace);
@@ -215,13 +254,45 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
-    EVENT_TRACE_PROPERTIES trace_manager<T>::query()
+    void trace_manager<T>::update()
+    {
+        if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            throw open_trace_failure();
+        }
+
+        update_trace();
+    }
+
+    template <typename T>
+    void trace_manager<T>::enable(
+        const typename T::trace_type::provider_type& p)
+    {
+        if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            throw open_trace_failure();            
+        }
+
+        enable_provider(p);
+    }
+
+    template <typename T>
+    void trace_manager<T>::disable(
+        const typename T::trace_type::provider_type& p)
+    {
+        if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            throw open_trace_failure();
+        }
+
+        disable_provider(p);
+    }
+
+    template <typename T>
+    trace_info trace_manager<T>::query()
     {
         return query_trace();
     }
 
     template <typename T>
-    EVENT_TRACE_PROPERTIES_V2 trace_manager<T>::query_v2()
+    trace_info_v2 trace_manager<T>::query_v2()
     {
         return query_trace();
     }
@@ -245,6 +316,12 @@ namespace krabs { namespace details {
     void trace_manager<T>::stop()
     {
         stop_trace();
+        close_trace();
+    }
+
+    template <typename T>
+    void trace_manager<T>::close()
+    {
         close_trace();
     }
 
@@ -354,9 +431,75 @@ namespace krabs { namespace details {
     }
 
     template <typename T>
-    EVENT_TRACE_PROPERTIES trace_manager<T>::query_trace()
+    trace_info trace_manager<T>::fill_trace_update_info()
     {
-        trace_info info = fill_trace_info();
+        trace_info info = query_trace();
+
+        /*
+           EnableFlags: Set this member to 0 to disable all kernel providers.
+           Otherwise, you must specify the kernel providers that you want to
+           enable or keep enabled. Applies only to system logger sessions.
+
+           FlushTimer: Set this member if you want to change the time to wait
+           before flushing buffers. If this member is 0, the member is not
+           updated.
+
+           LogFileNameOffset: Set this member if you want to switch to another
+           log file. If this member is 0, the file name is not updated. If the
+           offset is not zero and you do not change the log file name, the
+           function returns an error.
+
+           LogFileMode: Set this member if you want to turn
+           EVENT_TRACE_REAL_TIME_MODE on and off. To turn real time consuming
+           off, set this member to 0. To turn real time consuming on, set
+           this member to EVENT_TRACE_REAL_TIME_MODE and it will be OR'd with
+           the current modes.
+
+           MaximumBuffers: Set this member if you want to change the maximum
+           number of buffers that ETW uses. If this member is 0, the member
+           is not updated.
+       */
+        if (auto enable_flags = T::trace_type::construct_enable_flags(trace_)) {
+            info.properties.EnableFlags = enable_flags;
+        }
+
+        if (trace_.properties_.FlushTimer) {
+            info.properties.FlushTimer = trace_.properties_.FlushTimer;
+        }
+
+        if (trace_.properties_.LogFileMode) {
+            info.properties.LogFileMode = trace_.properties_.LogFileMode;
+        }
+        
+        if (trace_.properties_.MaximumBuffers) {
+            info.properties.MaximumBuffers = trace_.properties_.MaximumBuffers;
+        }
+        
+        return info;
+    }
+
+    template <typename T>
+    void trace_manager<T>::update_trace()
+    {
+        auto info = fill_trace_update_info();
+      
+        ULONG status = ControlTrace(
+            NULL,
+            trace_.name_.c_str(),
+            &info.properties,
+            EVENT_TRACE_CONTROL_UPDATE);
+
+        if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
+            error_check_common_conditions(status);
+        }
+    }
+
+    template <typename T>
+    trace_info trace_manager<T>::query_trace()
+    {
+        //trace_info info = fill_trace_info();
+        trace_info info = {};
+        info.properties.Wnode.BufferSize = sizeof(trace_info);
 
         ULONG status = ControlTrace(
                 NULL,
@@ -367,15 +510,15 @@ namespace krabs { namespace details {
 
         if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
             error_check_common_conditions(status);
-
-            return info.properties;
+            //return info.properties;
+            return info;
         }
 
         return { };
     }
 
     template <typename T>
-    EVENT_TRACE_PROPERTIES_V2 trace_manager<T>::query_trace_v2()
+    trace_info_v2 trace_manager<T>::query_trace_v2()
     {
         if (IsWindowsVersionOrGreater(10, 0, 15063)) {
             error_check_common_conditions(ERROR_NOT_SUPPORTED);
@@ -383,20 +526,20 @@ namespace krabs { namespace details {
             return { };
         }
 
-        trace_info_v2 info = fill_trace_info_v2();
+        trace_info_v2 info = {};
 
-        ULONG status = ControlTrace(
-            NULL,
-            trace_.name_.c_str(),
-            //info,
-            &info.properties,
-            EVENT_TRACE_CONTROL_QUERY);
+        //ULONG status = ControlTrace(
+        //    NULL,
+        //    trace_.name_.c_str(),
+        //    //info,
+        //    &info.properties,
+        //    EVENT_TRACE_CONTROL_QUERY);
 
-        if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
-            error_check_common_conditions(status);
-
-            return info.properties;
-        }
+        //if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
+        //    error_check_common_conditions(status);
+        //    //return info.properties;
+        //    return info;
+        //}
 
         return { };
     }
@@ -507,4 +650,26 @@ namespace krabs { namespace details {
     {
         T::trace_type::enable_providers(trace_);
     }
+
+    template <typename T>
+    void trace_manager<T>::disable_provider(
+        const typename T::trace_type::provider_type& p)
+    {
+        T::trace_type::disable_provider(trace_, p);
+    }
+
+    template <typename T>
+    void trace_manager<T>::enable_provider(
+        const typename T::trace_type::provider_type& p)
+    {   
+        if (trace_.registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            trace_.properties_ = query_trace().properties;
+            trace_.registrationHandle_ = trace_.properties_.Wnode.HistoricalContext;
+        }
+
+        if (trace_.registrationHandle_ != INVALID_PROCESSTRACE_HANDLE) {  
+            T::trace_type::enable_provider(trace_, p);
+        }     
+    }
+
 } /* namespace details */ } /* namespace krabs */
