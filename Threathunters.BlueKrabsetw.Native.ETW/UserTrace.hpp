@@ -213,6 +213,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         virtual void Update();
 
         /// <summary>
+        /// 
+        /// </summary>
+        virtual void TransitionToRealtime();
+
+        /// <summary>
         /// Get stats about events handled by this trace
         /// </summary>
         /// <returns>the <see cref="O365::Security::ETW::TraceStats"/> for the current trace object</returns>
@@ -313,6 +318,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     inline void UserTrace::Update()
     {
         ExecuteAndConvertExceptions(return trace_->update());
+    }
+
+    inline void UserTrace::TransitionToRealtime()
+    {
+        ExecuteAndConvertExceptions(return trace_->transition_to_realtime());
     }
 
     inline TraceStats UserTrace::QueryStats()

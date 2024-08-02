@@ -72,16 +72,16 @@
 //}
 
 
-
 /// <summary>
 /// Note: For existing sessions, pre-filtering capabilities cannot be used.
 /// </summary>
 void user_trace_012_open_trace::start()
 {
-    krabs::user_trace trace(L"DefenderApiLogger");
-    krabs::provider<> provider(krabs::guid(L"{f4e1897c-bb5d-5668-f1d8-040f4d8dd344}"));
+    krabs::user_trace trace(L"SecSense");
+    krabs::provider<> sec_provider(krabs::guid(L"{16c6501a-ff2d-46ea-868d-8f96cb0cb52d}"));
+    krabs::provider<> file_provider(L"Microsoft-Windows-Kernel-File");
 
-    provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
+    auto on_event = [](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
 
         // Once an event is received, if we want krabs to help us analyze it, we need
         // to snap in a schema to ask it for information.
@@ -89,9 +89,30 @@ void user_trace_012_open_trace::start()
         // We then have the ability to ask a few questions of the event.
         std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
         std::wcout << L"EventId" << schema.event_id() << std::endl;
-        });
+        };
+    sec_provider.add_on_event_callback(on_event);
+    file_provider.add_on_event_callback(on_event);
+    //sec_provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
 
-    trace.enable(provider);
+    //    // Once an event is received, if we want krabs to help us analyze it, we need
+    //    // to snap in a schema to ask it for information.
+    //    krabs::schema schema(record, trace_context.schema_locator);
+    //    // We then have the ability to ask a few questions of the event.
+    //    std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
+    //    std::wcout << L"EventId" << schema.event_id() << std::endl;
+    //    });
+
+
+
+    trace.enable(sec_provider);
+    trace.enable(file_provider);
+
+    auto stats = trace.query_stats();
+
+    if ((stats.log_file_mode & 0x100) == 0) {
+        trace.transition_to_realtime();
+    }
+
     trace.open();
 
     std::thread workerThread([&]() {
@@ -103,3 +124,35 @@ void user_trace_012_open_trace::start()
     trace.close();
     workerThread.join();
 }
+
+
+///// <summary>
+///// Note: For existing sessions, pre-filtering capabilities cannot be used.
+///// </summary>
+//void user_trace_012_open_trace::start()
+//{
+//    krabs::user_trace trace(L"DefenderApiLogger");
+//    krabs::provider<> provider(krabs::guid(L"{f4e1897c-bb5d-5668-f1d8-040f4d8dd344}"));
+//
+//    provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
+//
+//        // Once an event is received, if we want krabs to help us analyze it, we need
+//        // to snap in a schema to ask it for information.
+//        krabs::schema schema(record, trace_context.schema_locator);
+//        // We then have the ability to ask a few questions of the event.
+//        std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
+//        std::wcout << L"EventId" << schema.event_id() << std::endl;
+//        });
+//
+//    trace.enable(provider);
+//    trace.open();
+//
+//    std::thread workerThread([&]() {
+//        trace.process();
+//        });
+//
+//    const int durationInSeconds = 30;
+//    std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
+//    trace.close();
+//    workerThread.join();
+//}

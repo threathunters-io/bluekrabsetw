@@ -71,7 +71,7 @@ namespace krabs {
          *   Given optional predicate will be applied to ETW API filtered results
          * </summary>
          */
-        event_filter(std::vector<unsigned short> event_ids, filter_predicate predicate = nullptr);
+        event_filter(std::vector<unsigned short> event_ids, filter_predicate predicate=nullptr);
 
         /**
          * <summary>

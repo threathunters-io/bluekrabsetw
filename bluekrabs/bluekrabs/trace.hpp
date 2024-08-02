@@ -292,7 +292,7 @@ namespace krabs {
          * Transition the ETW trace from real-time to file or vice versa.
          * </summary>
          */
-        void transition();
+        void transition_to_realtime();
 
         /**
         * <summary>
@@ -559,9 +559,11 @@ namespace krabs {
     }
 
     template <typename T>
-    void trace<T>::transition()
+    void trace<T>::transition_to_realtime()
     {
-        return;
+        //EVENT_TRACE_CONTROL_CONVERT_TO_REALTIME
+        details::trace_manager<trace> manager(*this);
+        manager.transition_to_realtime();
     }
 
     template <typename T>

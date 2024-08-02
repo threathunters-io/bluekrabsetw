@@ -143,6 +143,11 @@ namespace krabs { namespace details {
             PVOID trace_information,
             ULONG information_length);
 
+        /// <summary>
+        /// 
+        /// </summary>
+        void transition_to_realtime();
+
         /**
          * <summary>
          * Notifies the underlying trace of the buffers that were processed.
@@ -323,6 +328,22 @@ namespace krabs { namespace details {
     void trace_manager<T>::close()
     {
         close_trace();
+    }
+
+    template <typename T>
+    void trace_manager<T>::transition_to_realtime()
+    {
+        auto info = query_trace();
+
+        ULONG status = ControlTrace(
+            NULL,
+            trace_.name_.c_str(),
+            &info.properties,
+            EVENT_TRACE_CONTROL_CONVERT_TO_REALTIME);
+
+        if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
+            error_check_common_conditions(status);
+        }
     }
 
     template <typename T>

@@ -180,6 +180,8 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// </example>
         virtual void Update();
 
+        virtual void TransitionToRealtime();
+
         /// <summary>
         /// Get stats about events handled by this trace
         /// </summary>
@@ -292,6 +294,11 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
     inline void KernelTrace::Update()
     {
         ExecuteAndConvertExceptions(return trace_->update());
+    }
+
+    inline void KernelTrace::TransitionToRealtime()
+    {
+        ExecuteAndConvertExceptions(return trace_->transition_to_realtime());
     }
 
     inline TraceStats KernelTrace::QueryStats()
