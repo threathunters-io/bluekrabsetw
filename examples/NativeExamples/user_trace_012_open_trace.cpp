@@ -105,7 +105,7 @@ void user_trace_012_open_trace::start()
 
 
     trace.enable(sec_provider);
-    trace.enable(file_provider);
+    //trace.enable(file_provider);
 
     auto stats = trace.query_stats();
 
@@ -115,14 +115,23 @@ void user_trace_012_open_trace::start()
 
     trace.open();
 
+    if ((stats.log_file_mode & 0x40) == 0) {
+        EVENT_TRACE_PROPERTIES etp = { 0 };
+        etp.LogFileMode = (stats.log_file_mode | 0x40);
+        trace.set_trace_properties(&etp);
+        trace.update();
+    }
+
     std::thread workerThread([&]() {
         trace.process();
         });
 
-    const int durationInSeconds = 30;
+    const int durationInSeconds = 10;
     std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
+    auto stats1 = trace.query_stats();
     trace.close();
     workerThread.join();
+    
 }
 
 

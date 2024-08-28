@@ -478,7 +478,7 @@ namespace krabs {
     void trace<T>::on_event(const EVENT_RECORD &record)
     {
         ++eventsHandled_;
-        std::lock_guard<std::mutex> lock(providers_mutex_);
+        //std::lock_guard<std::mutex> lock(providers_mutex_);
         T::forward_events(record, *this);
     }
 

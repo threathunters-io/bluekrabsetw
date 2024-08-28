@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>BlueKrabsetw.Native.ETW</id>
-        <version>4.4.0</version>
+        <version>4.4.2</version>
         <title>BlueKrabsetw.Native.ETW - managed wrappers for BlueKrabsetw</title>
         <authors>Dominik Phillips</authors>
         <owners>non</owners>
@@ -12,11 +12,8 @@
         <description>BlueKrabsetw.Native.ETW is a managed wrapper around the BlueKrabsetw ETW library.</description>
         <summary>BlueKrabsetw.Native.ETW is a managed wrapper around the BlueKrabsetw ETW library. It originates from the Microsoft.O365.Security.Native.ETW library and seeks to improve and include capabilities that have not yet been included in the former library.</summary>
         <releaseNotes>
-            Version 4.4.0:
-              - Provider Enhanced Runtime Capabilities.
-              - Session Enhanced Runtime Capabilities.
-              - Decoupling of Functionality to Allow Better Control of Sessions.
-              - Improved Pre-Filtering Mechanisms
+            Version 4.4.2:
+              - Remove mutex in on_event handler
         </releaseNotes>
         <copyright>non</copyright>
         <language />
