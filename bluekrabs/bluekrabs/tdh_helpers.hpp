@@ -14,50 +14,103 @@
 
 namespace krabs {
 
-#define CASE_TYPE(enum) case TDH_INTYPE_##enum: return #enum
+#define CASE_IN_TYPE(enum) case TDH_INTYPE_##enum: return #enum
 
     inline const char* in_type_to_string(_TDH_IN_TYPE type)
     {
         switch (type)
         {
-            CASE_TYPE(NULL);
-            CASE_TYPE(UNICODESTRING);
-            CASE_TYPE(ANSISTRING);
-            CASE_TYPE(INT8);
-            CASE_TYPE(UINT8);
-            CASE_TYPE(INT16);
-            CASE_TYPE(UINT16);
-            CASE_TYPE(INT32);
-            CASE_TYPE(UINT32);
-            CASE_TYPE(INT64);
-            CASE_TYPE(UINT64);
-            CASE_TYPE(FLOAT);
-            CASE_TYPE(DOUBLE);
-            CASE_TYPE(BOOLEAN);
-            CASE_TYPE(BINARY);
-            CASE_TYPE(GUID);
-            CASE_TYPE(POINTER);
-            CASE_TYPE(FILETIME);
-            CASE_TYPE(SYSTEMTIME);
-            CASE_TYPE(SID);
-            CASE_TYPE(HEXINT32);
-            CASE_TYPE(HEXINT64);
-            CASE_TYPE(COUNTEDSTRING);
-            CASE_TYPE(COUNTEDANSISTRING);
-            CASE_TYPE(REVERSEDCOUNTEDSTRING);
-            CASE_TYPE(REVERSEDCOUNTEDANSISTRING);
-            CASE_TYPE(NONNULLTERMINATEDSTRING);
-            CASE_TYPE(NONNULLTERMINATEDANSISTRING);
-            CASE_TYPE(UNICODECHAR);
-            CASE_TYPE(ANSICHAR);
-            CASE_TYPE(SIZET);
-            CASE_TYPE(HEXDUMP);
-            CASE_TYPE(WBEMSID);
+            CASE_IN_TYPE(NULL);
+            CASE_IN_TYPE(UNICODESTRING);
+            CASE_IN_TYPE(ANSISTRING);
+            CASE_IN_TYPE(INT8);
+            CASE_IN_TYPE(UINT8);
+            CASE_IN_TYPE(INT16);
+            CASE_IN_TYPE(UINT16);
+            CASE_IN_TYPE(INT32);
+            CASE_IN_TYPE(UINT32);
+            CASE_IN_TYPE(INT64);
+            CASE_IN_TYPE(UINT64);
+            CASE_IN_TYPE(FLOAT);
+            CASE_IN_TYPE(DOUBLE);
+            CASE_IN_TYPE(BOOLEAN);
+            CASE_IN_TYPE(BINARY);
+            CASE_IN_TYPE(GUID);
+            CASE_IN_TYPE(POINTER);
+            CASE_IN_TYPE(FILETIME);
+            CASE_IN_TYPE(SYSTEMTIME);
+            CASE_IN_TYPE(SID);
+            CASE_IN_TYPE(HEXINT32);
+            CASE_IN_TYPE(HEXINT64);
+            CASE_IN_TYPE(COUNTEDSTRING);
+            CASE_IN_TYPE(COUNTEDANSISTRING);
+            CASE_IN_TYPE(REVERSEDCOUNTEDSTRING);
+            CASE_IN_TYPE(REVERSEDCOUNTEDANSISTRING);
+            CASE_IN_TYPE(NONNULLTERMINATEDSTRING);
+            CASE_IN_TYPE(NONNULLTERMINATEDANSISTRING);
+            CASE_IN_TYPE(UNICODECHAR);
+            CASE_IN_TYPE(ANSICHAR);
+            CASE_IN_TYPE(SIZET);
+            CASE_IN_TYPE(HEXDUMP);
+            CASE_IN_TYPE(WBEMSID);
             default: return "<INVALID VALUE>";
         }
     }
 
-#undef CASE_TYPE
+#undef CASE_IN_TYPE
+
+#define CASE_OUT_TYPE(enum) case TDH_OUTTYPE_##enum: return #enum
+
+    inline const char* out_type_to_string(_TDH_OUT_TYPE type)
+    {
+        switch (type)
+        {
+            CASE_OUT_TYPE(NULL);
+            CASE_OUT_TYPE(STRING);
+            CASE_OUT_TYPE(DATETIME);
+            CASE_OUT_TYPE(BYTE);
+            CASE_OUT_TYPE(UNSIGNEDBYTE);
+            CASE_OUT_TYPE(SHORT);
+            CASE_OUT_TYPE(UNSIGNEDSHORT);
+            CASE_OUT_TYPE(INT);
+            CASE_OUT_TYPE(UNSIGNEDINT);
+            CASE_OUT_TYPE(LONG);
+            CASE_OUT_TYPE(UNSIGNEDLONG);
+            CASE_OUT_TYPE(FLOAT);
+            CASE_OUT_TYPE(DOUBLE);
+            CASE_OUT_TYPE(BOOLEAN);
+            CASE_OUT_TYPE(GUID);
+            CASE_OUT_TYPE(HEXBINARY);
+            CASE_OUT_TYPE(HEXINT8);
+            CASE_OUT_TYPE(HEXINT16);
+            CASE_OUT_TYPE(HEXINT32);
+            CASE_OUT_TYPE(HEXINT64);
+            CASE_OUT_TYPE(PID);
+            CASE_OUT_TYPE(TID);
+            CASE_OUT_TYPE(PORT);
+            CASE_OUT_TYPE(IPV4);
+            CASE_OUT_TYPE(IPV6);
+            CASE_OUT_TYPE(SOCKETADDRESS);
+            CASE_OUT_TYPE(CIMDATETIME);
+            CASE_OUT_TYPE(ETWTIME);
+            CASE_OUT_TYPE(XML);
+            CASE_OUT_TYPE(ERRORCODE);
+            CASE_OUT_TYPE(WIN32ERROR);
+            CASE_OUT_TYPE(NTSTATUS);
+            CASE_OUT_TYPE(HRESULT);
+            CASE_OUT_TYPE(CULTURE_INSENSITIVE_DATETIME);
+            CASE_OUT_TYPE(JSON);
+            CASE_OUT_TYPE(UTF8);
+            CASE_OUT_TYPE(PKCS7_WITH_TYPE_INFO);
+            CASE_OUT_TYPE(CODE_POINTER);
+            CASE_OUT_TYPE(DATETIME_UTC);
+            CASE_OUT_TYPE(REDUCEDSTRING);
+            CASE_OUT_TYPE(NOPRINT);
+            default: return "<INVALID VALUE>";
+        }
+    }
+
+#undef CASE_OUT_TYPE
 
     namespace debug {
 

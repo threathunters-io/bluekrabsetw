@@ -87,6 +87,16 @@ namespace krabs {
         template <typename T>
         T parse(const std::wstring &name);
 
+        /**
+        * todo
+        */
+        std::pair<const char*, _TDH_IN_TYPE> parse_in_type(const std::wstring& name);
+
+        /**
+        * todo
+        */
+        std::pair<const char*, _TDH_OUT_TYPE> parse_out_type(const std::wstring& name);
+
         template <typename Adapter>
         auto view_of(const std::wstring &name, Adapter &adapter) -> collection_view<typename Adapter::const_iterator>;
 
@@ -413,6 +423,32 @@ namespace krabs {
 
         return pointer::from_bytes(propInfo.pPropertyIndex_, propInfo.length_);
     }
+
+    // pars_type
+    // ------------------------------------------------------------------------
+
+    inline std::pair<const char*, _TDH_IN_TYPE> parser::parse_in_type(const std::wstring& name)
+    {
+        auto prop_info = find_property(name);
+        throw_if_property_not_found(prop_info);
+
+        auto in_type_value = (_TDH_IN_TYPE)prop_info.pEventPropertyInfo_->nonStructType.OutType;
+        auto in_type_str = in_type_to_string(in_type_value);
+
+        return std::make_pair(in_type_str, in_type_value);
+    }
+
+    inline std::pair<const char*, _TDH_OUT_TYPE> parser::parse_out_type(const std::wstring& name)
+    {
+        auto prop_info = find_property(name);
+        throw_if_property_not_found(prop_info);
+
+        auto out_type_value = (_TDH_OUT_TYPE)prop_info.pEventPropertyInfo_->nonStructType.OutType;
+        auto out_type_str = out_type_to_string(out_type_value);
+
+        return std::make_pair(out_type_str, out_type_value);
+    }
+
 
     // view_of
     // ------------------------------------------------------------------------

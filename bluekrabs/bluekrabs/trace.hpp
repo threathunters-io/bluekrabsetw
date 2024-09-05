@@ -497,7 +497,7 @@ namespace krabs {
             }
         };
 
-        if (registrationHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+        if (registrationHandle_ == INVALID_PROCESSTRACE_HANDLE && sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
             insert_unique(p);
         }
         else {        

@@ -54,5 +54,59 @@ namespace ManagedExamples
             trace.Disable(providerApi);
 
         }
+
+        public static void Start1()
+        {
+            var trace = new UserTrace("SecSense");
+
+            // Rundown events are not true real-time tracing events. Instead they describe the state of the system.
+            // Usually these are just extra events in the provider. For example, Microsoft-Windows-Kernel-Process
+            // has ProcessRundown events as well as ProcessStart events.            
+            var secProvider = new Provider(Guid.Parse("{16c6501a-ff2d-46ea-868d-8f96cb0cb52d}"));
+            var fileProvider = new Provider(Guid.Parse("{edd08927-9cc4-4e65-b970-c2560fb5c289}"));
+            
+            //provider.Any = 0x10;  // WINEVENT_KEYWORD_PROCESS
+            // ...but the rundown events often cannot be enabled by keyword alone.
+            // The trace needs to be sent EVENT_CONTROL_CODE_CAPTURE_STATE.
+            // This is what EnableRundownEvents() does.
+            //provider.EnableRundownEvents();
+
+            // process rundown events - i.e. running processes
+            //var processRundownFilter = new EventFilter(Filter.EventIdIs(15));  // ProcessRundown
+            secProvider.OnEvent += (record) =>
+            {
+                // Records have general properties that are applicable to every ETW
+                // record regardless of schema. They give us general information.
+                Console.WriteLine("Event " + record.Id + " (" + record.Name + ") received.");
+            };
+            //provider.AddFilter(processRundownFilter);
+
+            fileProvider.OnEvent += (record) =>
+            {
+                // Records have general properties that are applicable to every ETW
+                // record regardless of schema. They give us general information.
+                Console.WriteLine("Event " + record.Id + " (" + record.Name + ") received.");
+            };
+
+            trace.Enable(secProvider);
+            trace.Open();
+            trace.Enable(fileProvider);
+            Thread workingThread = new Thread(() => {
+                trace.Process();
+            });
+
+            workingThread.Start();
+            Thread.Sleep(1000);
+            trace.Close();
+            workingThread.Join();
+
+        }
     }
+
+
+
+
+    
 }
+
+

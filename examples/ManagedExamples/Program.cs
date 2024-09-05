@@ -23,7 +23,8 @@ namespace ManagedExamples
             //UserTrace009_OpenTrace.Start();
             //UserTrace010_ExtendedData.Start();
             //UserTrace011_UpdateTrace.Start();
-            UserTrace012_UpdateProvider.Start();
+            //UserTrace012_UpdateProvider.Start();
+            UserTrace012_UpdateProvider.Start1();
         }
     }
 }

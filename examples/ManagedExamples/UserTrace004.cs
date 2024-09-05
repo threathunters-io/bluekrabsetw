@@ -39,6 +39,7 @@ namespace ManagedExamples
             {
                 System.Diagnostics.Debug.Assert(record.Id == 7937);
                 Console.WriteLine(record.GetUnicodeString("ContextInfo"));
+                
             };
 
             // EventFilters are attached to providers. Events that are attached to the filter

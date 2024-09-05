@@ -47,6 +47,8 @@ void user_trace_001::start()
             // We could alternatively use try_parse if we didn't want an exception to
             // be thrown in the case of failure.
             std::wstring context = parser.parse<std::wstring>(L"ContextInfo");
+            std::cout << "intype " << parser.parse_in_type(L"ContextInfo").first << std::endl;
+            std::cout << "outtype " << parser.parse_out_type(L"ContextInfo").first << std::endl;
             std::wcout << L"\tContext: " << context << std::endl;
         }
     });

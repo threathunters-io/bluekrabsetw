@@ -87,8 +87,29 @@ void user_trace_012_open_trace::start()
         // to snap in a schema to ask it for information.
         krabs::schema schema(record, trace_context.schema_locator);
         // We then have the ability to ask a few questions of the event.
-        std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
-        std::wcout << L"EventId" << schema.event_id() << std::endl;
+        switch (schema.event_id()) {
+        case 1:
+            break;
+        case 17:
+            break;
+        case 18:
+            break;
+        case 19:
+            break;
+        case 22:
+            break;
+        case 23:
+            break;
+        case 24:
+            break;
+        case 35:
+            break;
+        default:
+            std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
+            std::wcout << L"EventId" << schema.event_id() << std::endl;
+            break;
+        }
+        
         };
     sec_provider.add_on_event_callback(on_event);
     file_provider.add_on_event_callback(on_event);
@@ -126,7 +147,7 @@ void user_trace_012_open_trace::start()
         trace.process();
         });
 
-    const int durationInSeconds = 10;
+    const int durationInSeconds = 100000;
     std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
     auto stats1 = trace.query_stats();
     trace.close();
