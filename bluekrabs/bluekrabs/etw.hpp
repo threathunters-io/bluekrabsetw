@@ -6,7 +6,7 @@
 #pragma once
 
 #define INITGUID
-
+//#include <sysinfoapi.h>
 #include "compiler_check.hpp"
 #include "trace.hpp"
 #include "errors.hpp"
@@ -100,6 +100,22 @@ namespace krabs { namespace details {
         * open() needs to called for this to work first.
         * </summary>
         */
+        //void clear();
+
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
+        void flush();
+
+        /**
+        * <summary>
+        * Starts processing the ETW trace identified by the info in the trace type.
+        * open() needs to called for this to work first.
+        * </summary>
+        */
         void disable(const typename T::trace_type::provider_type& p);
 
         /**
@@ -175,6 +191,7 @@ namespace krabs { namespace details {
         trace_info query_trace();
         trace_info_v2 query_trace_v2();
         void process_trace();
+        void flush_trace();
         void enable_providers();
         void disable_provider(const typename T::trace_type::provider_type& p);
         void enable_provider(const typename T::trace_type::provider_type& p);
@@ -256,6 +273,13 @@ namespace krabs { namespace details {
     void trace_manager<T>::process()
     {
         process_trace();
+    }
+
+
+    template <typename T>
+    void trace_manager<T>::flush() 
+    {
+        flush_trace();
     }
 
     template <typename T>
@@ -649,9 +673,40 @@ namespace krabs { namespace details {
         // before ProcessTrace() in order for the rundown events to be generated.
         T::trace_type::enable_rundown(trace_);
 
-        ULONG status = ProcessTrace(&trace_.sessionHandle_, 1, NULL, NULL);
+        ULONG status = ProcessTrace(&trace_.sessionHandle_, 1, trace_.start_time_, trace_.end_time_);
         error_check_common_conditions(status);
     }
+
+    template <typename T>
+    void trace_manager<T>::flush_trace()
+    {
+        trace_info info = {};
+        info.properties.Wnode.BufferSize = sizeof(trace_info);
+
+        ULONG status = ControlTrace(
+            NULL,
+            trace_.name_.c_str(),
+            //info,
+            &info.properties,
+            EVENT_TRACE_CONTROL_FLUSH);
+
+        if (status != ERROR_WMI_INSTANCE_NOT_FOUND) {
+            error_check_common_conditions(status);
+            //return info.properties;
+            return info;
+        }
+
+
+
+    //EVENT_TRACE_CONTROL_FLUSH: Flushes the session's active buffers.
+
+        //This can be used with an in - memory session(a session started with the EVENT_TRACE_BUFFERING_MODE flag) to write the data from the trace to a file.
+
+        //You do not normally need to flush file - based or real - time sessions because ETW will automatically flush a buffer when it is full(i.e.when it does not have room for the next event), when the trace session's FlushTimer expires, or when the trace session is closed.
+
+        return { };
+    }
+
 
     template <typename T>
     void trace_manager<T>::close_trace()

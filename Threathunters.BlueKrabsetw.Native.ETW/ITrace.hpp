@@ -56,6 +56,21 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// <summary>
         /// Stops listening for events.
         /// </summary>
+        void Process();
+
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        void Process(DateTime^ startTime, bool isStartTime);
+
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
+        void Process(DateTime^ startTime, DateTime^ endTime);
+
+        /// <summary>
+        /// Stops listening for events.
+        /// </summary>
         void TransitionToRealtime();
 
         /// <summary>

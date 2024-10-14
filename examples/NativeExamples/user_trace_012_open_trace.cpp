@@ -77,82 +77,94 @@
 /// </summary>
 void user_trace_012_open_trace::start()
 {
-    krabs::user_trace trace(L"SecSense");
-    krabs::provider<> sec_provider(krabs::guid(L"{16c6501a-ff2d-46ea-868d-8f96cb0cb52d}"));
-    krabs::provider<> file_provider(L"Microsoft-Windows-Kernel-File");
+	krabs::user_trace trace(L"SecSense");
+	krabs::provider<> sec_provider(krabs::guid(L"{16c6501a-ff2d-46ea-868d-8f96cb0cb52d}"));
+	krabs::provider<> file_provider(L"Microsoft-Windows-Kernel-File");
+	//krabs::provider<> win_http(L"Microsoft-Windows-Kernel-Process");
+	
+	auto on_event = [](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
 
-    auto on_event = [](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
+		// Once an event is received, if we want krabs to help us analyze it, we need
+		// to snap in a schema to ask it for information.
+		krabs::schema schema(record, trace_context.schema_locator);
+		// We then have the ability to ask a few questions of the event.
+		SYSTEMTIME start_time_sys;
 
-        // Once an event is received, if we want krabs to help us analyze it, we need
-        // to snap in a schema to ask it for information.
-        krabs::schema schema(record, trace_context.schema_locator);
-        // We then have the ability to ask a few questions of the event.
-        switch (schema.event_id()) {
-        case 1:
-            break;
-        case 17:
-            break;
-        case 18:
-            break;
-        case 19:
-            break;
-        case 22:
-            break;
-        case 23:
-            break;
-        case 24:
-            break;
-        case 35:
-            break;
-        default:
-            std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
-            std::wcout << L"EventId" << schema.event_id() << std::endl;
-            break;
-        }
-        
-        };
-    sec_provider.add_on_event_callback(on_event);
-    file_provider.add_on_event_callback(on_event);
-    //sec_provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
+		FileTimeToSystemTime((FILETIME*)(&(record.EventHeader.TimeStamp)), &start_time_sys);
+		switch (schema.event_id()) {
+		case 1:
+			break;
+		case 17:
+			break;
+		case 18:
+			break;
+		case 19:
+			break;
+		case 22:
+			break;
+		case 23:
+			break;
+		case 24:
+			break;
+		case 35:
+			break;
+		default:
+			std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
+			std::wcout << L"EventId" << schema.event_id() << std::endl;
+			break;
+		}
+		
+		};
+	
+	//win_http.add_on_event_callback(on_event);
+	sec_provider.add_on_event_callback(on_event);
+	file_provider.add_on_event_callback(on_event);
+	//sec_provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
 
-    //    // Once an event is received, if we want krabs to help us analyze it, we need
-    //    // to snap in a schema to ask it for information.
-    //    krabs::schema schema(record, trace_context.schema_locator);
-    //    // We then have the ability to ask a few questions of the event.
-    //    std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
-    //    std::wcout << L"EventId" << schema.event_id() << std::endl;
-    //    });
-
+	//    // Once an event is received, if we want krabs to help us analyze it, we need
+	//    // to snap in a schema to ask it for information.
+	//    krabs::schema schema(record, trace_context.schema_locator);
+	//    // We then have the ability to ask a few questions of the event.
+	//    std::wcout << L"ProviderName " << schema.provider_name() << std::endl;
+	//    std::wcout << L"EventId" << schema.event_id() << std::endl;
+	//    });
 
 
-    trace.enable(sec_provider);
-    //trace.enable(file_provider);
 
-    auto stats = trace.query_stats();
+   
+	trace.enable(file_provider);
 
-    if ((stats.log_file_mode & 0x100) == 0) {
-        trace.transition_to_realtime();
-    }
+	auto stats = trace.query_stats();
 
-    trace.open();
+	/*if ((stats.log_file_mode & 0x100) == 0) {
+		trace.transition_to_realtime();
+	}*/
 
-    if ((stats.log_file_mode & 0x40) == 0) {
-        EVENT_TRACE_PROPERTIES etp = { 0 };
-        etp.LogFileMode = (stats.log_file_mode | 0x40);
-        trace.set_trace_properties(&etp);
-        trace.update();
-    }
+	trace.open();
 
-    std::thread workerThread([&]() {
-        trace.process();
-        });
+	/*if ((stats.log_file_mode & 0x40) == 0) {
+		EVENT_TRACE_PROPERTIES etp = { 0 };
+		etp.LogFileMode = (stats.log_file_mode | 0x40);
+		trace.set_trace_properties(&etp);
+		trace.update();
+	}*/
 
-    const int durationInSeconds = 100000;
-    std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
-    auto stats1 = trace.query_stats();
-    trace.close();
-    workerThread.join();
-    
+
+	FILETIME start_time;
+	SYSTEMTIME start_time_sys;
+	GetSystemTimeAsFileTime(&start_time);
+	FileTimeToSystemTime(&start_time, &start_time_sys);
+	
+	std::thread workerThread([&]() {
+		//trace.process();
+		trace.process(&start_time);
+		});
+
+	const int durationInSeconds = 100000;
+	std::this_thread::sleep_for(std::chrono::seconds(durationInSeconds));
+	auto stats1 = trace.query_stats();
+	trace.close();
+	workerThread.join(); 
 }
 
 

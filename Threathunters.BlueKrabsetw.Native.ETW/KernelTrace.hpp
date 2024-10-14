@@ -118,7 +118,7 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// Opens a trace session.
         /// </summary>
         /// <example>
-        ///     var trace = new KernelTrace();
+        ///     var trace = new UserTrace();
         ///     // ...
         ///     trace.Open();
         ///     // ...
@@ -129,6 +129,40 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         /// registered with the ETW subsystem before you start processing events.
         /// </remarks>
         virtual void Process();
+
+
+        /// <summary>
+        /// Opens a trace session.
+        /// </summary>
+        /// <example>
+        ///     var trace = new UserTrace();
+        ///     // ...
+        ///     trace.Open();
+        ///     // ...
+        ///     trace.Process();
+        /// </example>
+        /// <remarks>
+        /// This is an optional call before Start() if you need the trace
+        /// registered with the ETW subsystem before you start processing events.
+        /// </remarks>
+        virtual void Process(DateTime^ time, bool isStartTime);
+
+
+        /// <summary>
+        /// Opens a trace session.
+        /// </summary>
+        /// <example>
+        ///     var trace = new UserTrace();
+        ///     // ...
+        ///     trace.Open();
+        ///     // ...
+        ///     trace.Process();
+        /// </example>
+        /// <remarks>
+        /// This is an optional call before Start() if you need the trace
+        /// registered with the ETW subsystem before you start processing events.
+        /// </remarks>
+        virtual void Process(DateTime^ startTime, DateTime^ endTime);
 
         /// <summary>
         /// Starts listening for events from the enabled providers.
@@ -241,7 +275,8 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         : trace_()
     {
         std::wstring nativeName = msclr::interop::marshal_as<std::wstring>(name);
-        trace_.Swap(O365::Security::ETW::NativePtr<krabs::kernel_trace>(nativeName));
+        O365::Security::ETW::NativePtr<krabs::kernel_trace> temp(nativeName);
+        trace_.Swap(temp);
     }
 
     inline void KernelTrace::Enable(O365::Security::ETW::KernelProvider ^provider)
@@ -276,9 +311,48 @@ namespace Microsoft { namespace O365 { namespace Security { namespace ETW {
         ExecuteAndConvertExceptions(return trace_->start());
     }
 
+    inline void KernelTrace::Process(DateTime^ time, bool isStartTime)
+    {
+        ::FILETIME _time;
+        {
+            LARGE_INTEGER temp;
+			temp.QuadPart = time->ToFileTimeUtc();
+            _time.dwLowDateTime = temp.LowPart;
+            _time.dwHighDateTime = temp.HighPart;
+        }
+
+        if (isStartTime) {
+            ExecuteAndConvertExceptions((void)trace_->process(&_time));
+        }
+        else {
+            ExecuteAndConvertExceptions((void)trace_->process(nullptr, &_time));
+        }
+    }
+
     inline void KernelTrace::Process()
     {
-        ExecuteAndConvertExceptions(return trace_->process());
+        ExecuteAndConvertExceptions((void)trace_->process());
+    }
+
+    inline void KernelTrace::Process(DateTime^ startTime, DateTime^ endTime)
+    {
+        ::FILETIME _start_time;
+        {
+            LARGE_INTEGER temp;
+			temp.QuadPart = startTime->ToFileTimeUtc();
+            _start_time.dwLowDateTime = temp.LowPart;
+            _start_time.dwHighDateTime = temp.HighPart;
+        }
+
+        ::FILETIME _end_time;
+        {
+            LARGE_INTEGER temp;
+			temp.QuadPart = endTime->ToFileTimeUtc();
+            _end_time.dwLowDateTime = temp.LowPart;
+            _end_time.dwHighDateTime = temp.HighPart;
+        }
+
+        ExecuteAndConvertExceptions((void)trace_->process(&_start_time, &_end_time));
     }
 
     inline void KernelTrace::Stop()

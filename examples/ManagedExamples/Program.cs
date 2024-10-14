@@ -20,11 +20,11 @@ namespace ManagedExamples
             //FakingEvents001.Start();
             //WppTrace001.Start();
             //UserTrace008_DirectFilter.Start();
-            //UserTrace009_OpenTrace.Start();
+            UserTrace009_OpenTrace.Start();
             //UserTrace010_ExtendedData.Start();
             //UserTrace011_UpdateTrace.Start();
             //UserTrace012_UpdateProvider.Start();
-            UserTrace012_UpdateProvider.Start1();
+            //UserTrace012_UpdateProvider.Start1();
         }
     }
 }

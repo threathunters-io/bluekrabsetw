@@ -104,8 +104,8 @@ DWORD initiate_capture(HANDLE hDriver) {
 void user_trace_013_pktmon::start()
 {
 	HANDLE hDriver;
-    krabs::user_trace trace(L"pktmon_poc");
-    //krabs::provider<> provider(krabs::guid(L"{4d4f80d9-c8bd-4d73-bb5b-19c90402c5ac}"));
+	krabs::user_trace trace(L"pktmon_poc");
+	//krabs::provider<> provider(krabs::guid(L"{4d4f80d9-c8bd-4d73-bb5b-19c90402c5ac}"));
 	//krabs::provider<> provider(L"Microsoft-Windows-NDIS-PacketCapture");
 	krabs::provider<> provider(L"Microsoft-Windows-NDIS");
 	provider.enable_property(provider.enable_property() | EVENT_ENABLE_PROPERTY_PROCESS_START_KEY | EVENT_ENABLE_PROPERTY_SID | EVENT_ENABLE_PROPERTY_TS_ID);
@@ -130,14 +130,14 @@ void user_trace_013_pktmon::start()
 	}
 	
 
-    provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
+	provider.add_on_event_callback([](const EVENT_RECORD& record, const krabs::trace_context& trace_context) {
 
-        // Once an event is received, if we want krabs to help us analyze it, we need
-        // to snap in a schema to ask it for information.
-        krabs::schema schema(record, trace_context.schema_locator);
+		// Once an event is received, if we want krabs to help us analyze it, we need
+		// to snap in a schema to ask it for information.
+		krabs::schema schema(record, trace_context.schema_locator);
 		
-        // We then have the ability to ask a few questions of the event.        
-        krabs::parser parser(schema);
+		// We then have the ability to ask a few questions of the event.        
+		krabs::parser parser(schema);
 		//if (schema.event_id() == 120) {
 		//	std::wcout << L"Event " << schema.event_id();
 		//	std::wcout << L"(" << schema.event_name() << L") received." << std::endl;
@@ -176,11 +176,8 @@ void user_trace_013_pktmon::start()
 		
 			std::wcout << L"Event " << schema.event_id();
 			std::wcout << L"(" << schema.event_name() << L") received." << std::endl;
-		
-		
+		});
 
-        });
-
-    trace.enable(provider);
-    trace.start();  
+	trace.enable(provider);
+	trace.start();  
 }

@@ -156,7 +156,10 @@ namespace krabs {
     inline guid guid::random_guid()
     {
         GUID tmpGuid;
-        CoCreateGuid(&tmpGuid);
+        HRESULT hr = CoCreateGuid(&tmpGuid);  
+        if (FAILED(hr)) {  
+           // Handle the error appropriately  
+        }
         return guid(tmpGuid);
     }
 
