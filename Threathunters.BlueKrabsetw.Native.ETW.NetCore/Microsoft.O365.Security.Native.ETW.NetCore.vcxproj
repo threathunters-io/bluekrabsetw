@@ -24,7 +24,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9DE6788C-5759-4A75-B484-ABA4C7EF5F08}</ProjectGuid>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Keyword>NetCoreCProj</Keyword>
     <RootNamespace>ETWLib</RootNamespace>
     <ProjectName>Threathunters.BlueKrabsetw.Native.ETW.NetCore</ProjectName>
@@ -36,6 +36,7 @@
     <ReadOnlyProject>false</ReadOnlyProject>
     <ReplaceWildcardsInProjectItems>true</ReplaceWildcardsInProjectItems>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\$(TargetFramework)\</OutDir>
+    <WindowsTargetPlatformMinVersion>8.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>
   <!--
       Manually creating the path because MSBuild doesn't create this folder which causes:
@@ -123,7 +124,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\bluekrabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5271;4679</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,7 +137,12 @@
       <Message>Verify snk file is generated</Message>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>sign</Message>
+      <Message>
+      </Message>
+      <Command>for /D %%d in ("$(VC_DebugCppRuntimeFilesPath_x64)\*") do (
+    xcopy "%%d\*.dll" "$(OutDir)runtime_files" /D /Y /I
+)
+xcopy "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.UniversalCRT.Debug\$(TargetPlatformVersion)\Redist\Debug\x64\ucrtbased.dll" "$(OutDir)..\runtime_files" /D /Y /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugRemote|x64'">
@@ -148,7 +154,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\bluekrabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5271;4679;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -161,7 +167,12 @@
       <Message>Verify snk file is generated</Message>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Message>sign</Message>
+      <Message>
+      </Message>
+      <Command>for /D %%d in ("$(VC_DebugCppRuntimeFilesPath_x64)\*") do (
+    xcopy "%%d\*.dll" "$(OutDir)..\runtime_files" /D /Y /I
+)
+xcopy "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Microsoft.UniversalCRT.Debug\$(TargetPlatformVersion)\Redist\Debug\x64\ucrtbased.dll" "$(OutDir)..\runtime_files" /D /Y /I</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugSigning|x64'">
