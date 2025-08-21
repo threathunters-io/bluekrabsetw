@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <tdh.h>
 #include <evntrace.h>
+#include <mutex>
 
 #include <memory>
 #include <unordered_map>
@@ -112,6 +113,7 @@ namespace krabs {
 
     private:
         mutable std::unordered_map<schema_key, std::unique_ptr<char[]>> cache_;
+        mutable std::mutex cache_mutex_;
     };
 
     // Implementation
@@ -119,6 +121,7 @@ namespace krabs {
 
     inline const PTRACE_EVENT_INFO schema_locator::get_event_schema(const EVENT_RECORD &record) const
     {
+        std::lock_guard<std::mutex> lock(cache_mutex_);
         // check the cache
         auto key = schema_key(record);
         auto& buffer = cache_[key];
