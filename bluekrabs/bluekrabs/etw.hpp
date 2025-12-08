@@ -611,7 +611,7 @@ namespace krabs { namespace details {
         }
         else {
             info_v2 = fill_trace_info_v2();
-            info = reinterpret_cast<EVENT_TRACE_PROPERTIES*>(&info_v2.properties);           
+            info = reinterpret_cast<EVENT_TRACE_PROPERTIES*>(&info_v2.properties);
         }
 
         ULONG status = StartTrace(&trace_.registrationHandle_,

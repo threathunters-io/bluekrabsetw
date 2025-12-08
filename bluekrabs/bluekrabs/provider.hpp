@@ -10,7 +10,7 @@
 
 #include "compiler_check.hpp"
 #include "filtering/event_filter.hpp"
-#include "filtering/pre_event_filter.hpp"
+#include "filtering/filter_descriptor.hpp"
 #include "perfinfo_groupmask.hpp"
 #include "trace_context.hpp"
 #include "wstring_convert.hpp"

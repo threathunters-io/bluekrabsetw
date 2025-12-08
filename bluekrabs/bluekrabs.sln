@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32317.152
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11222.16 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{5C9E224B-AEB7-456B-B309-92292ACE1A0D}"
 	ProjectSection(SolutionItems) = preProject
@@ -71,9 +71,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "filtering", "filtering", "{
 	ProjectSection(SolutionItems) = preProject
 		bluekrabs\filtering\comparers.hpp = bluekrabs\filtering\comparers.hpp
 		bluekrabs\filtering\event_filter.hpp = bluekrabs\filtering\event_filter.hpp
+		bluekrabs\filtering\filter_descriptor.hpp = bluekrabs\filtering\filter_descriptor.hpp
 		bluekrabs\filtering\post_event_filter.hpp = bluekrabs\filtering\post_event_filter.hpp
 		bluekrabs\filtering\predicates.hpp = bluekrabs\filtering\predicates.hpp
-		bluekrabs\filtering\pre_event_filter.hpp = bluekrabs\filtering\pre_event_filter.hpp
 		bluekrabs\filtering\view_adapters.hpp = bluekrabs\filtering\view_adapters.hpp
 	EndProjectSection
 EndProject
