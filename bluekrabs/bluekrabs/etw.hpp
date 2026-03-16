@@ -58,6 +58,15 @@ namespace krabs { namespace details {
 
         /**
          * <summary>
+         * Creates the trace by the info in the trace type. 
+         * In conjunction with starting, registers the trace, enables 
+         * providers and opens it without direct processing.
+         * </summary>
+         */
+        void create();
+
+        /**
+         * <summary>
          * Starts the ETW trace identified by the info in the trace type.
          * </summary>
          */
@@ -251,6 +260,16 @@ namespace krabs { namespace details {
     trace_manager<T>::trace_manager(T &trace)
     : trace_(trace)
     {}
+
+    template <typename T>
+    void trace_manager<T>::create()
+    {
+        if (trace_.sessionHandle_ == INVALID_PROCESSTRACE_HANDLE) {
+            register_trace();
+            enable_providers();
+            (void)open_trace();
+        }
+    }
 
     template <typename T>
     void trace_manager<T>::start()
