@@ -113,6 +113,15 @@ namespace krabs {
 		 * </example>
 		 */
 		~trace();
+		
+		/*
+		* <summary>
+		* Creates the trace by the info in the trace type.
+		* In conjunction with starting, registers the trace, enables 
+	    * providers and opens it without direct processing.
+		* </summary>
+		*/
+		void create();
 
 		/**
 		 * <summary>
@@ -545,6 +554,14 @@ namespace krabs {
 				enabled_providers_.erase(it);
 			}
 		}
+	}
+
+	template <typename T>
+	void trace<T>::create()
+	{
+		eventsHandled_ = 0;
+		details::trace_manager<trace> manager(*this);
+		manager.create();
 	}
 
 	template <typename T>
