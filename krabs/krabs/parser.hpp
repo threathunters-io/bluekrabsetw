@@ -4,9 +4,9 @@
 #pragma once
 
 #include <cassert>
-#include <deque>
-#include <utility>
 #include <stdexcept>
+#include <string_view>
+#include <vector>
 
 #include <functional>
 
@@ -76,7 +76,7 @@ namespace krabs {
          * </remarks>
          */
         template <typename T>
-        bool try_parse(const std::wstring &name, T &out);
+        bool try_parse(std::wstring_view name, T &out);
 
         /**
          * <summary>
@@ -85,23 +85,24 @@ namespace krabs {
          * </summary>
          */
         template <typename T>
-        T parse(const std::wstring &name);
+        T parse(std::wstring_view name);
 
         template <typename Adapter>
-        auto view_of(const std::wstring &name, Adapter &adapter) -> collection_view<typename Adapter::const_iterator>;
+        auto view_of(std::wstring_view name, Adapter &adapter) -> collection_view<typename Adapter::const_iterator>;
 
     private:
-        property_info find_property(const std::wstring &name);
-        void cache_property(const wchar_t *name, property_info info);
+        property_info find_property(std::wstring_view name);
+        void cache_property(ULONG index, property_info info);
 
     private:
         const schema &schema_;
         const BYTE *pEndBuffer_;
         BYTE *pBufferIndex_;
         ULONG lastPropertyIndex_;
-
-        // Maintain a mapping from property name to blob data index.
-        std::deque<std::pair<const wchar_t *, property_info>> propertyCache_;
+        // Persistent name to index map shared across all events of the same type.
+        const property_name_map *pPropertyNames_;
+        // Maintain a mapping from property index to blob data location.
+        std::vector<property_info> propertyCache_;
     };
 
     // Implementation
@@ -112,6 +113,8 @@ namespace krabs {
     , pEndBuffer_((BYTE*)s.record_.UserData + s.record_.UserDataLength)
     , pBufferIndex_((BYTE*)s.record_.UserData)
     , lastPropertyIndex_(0)
+    , pPropertyNames_(s.pPropertyNames_)
+    , propertyCache_(s.pSchema_->PropertyCount)
     {}
 
     inline property_iterator parser::properties() const
@@ -119,7 +122,7 @@ namespace krabs {
         return property_iterator(schema_);
     }
 
-    inline property_info parser::find_property(const std::wstring &name)
+    inline property_info parser::find_property(std::wstring_view name)
     {
         // A schema contains a collection of properties that are keyed by name.
         // These properties are stored in a blob of bytes that needs to be
@@ -129,15 +132,40 @@ namespace krabs {
         // the contents within it. This is janky, so our strategy is to
         // minimize this as much as possible via caching.
 
-        // The first step is to use our cache for the property to see if we've
-        // discovered it already.
-        for (auto &item : propertyCache_) {
-            if (name == item.first) {
-                return item.second;
+        const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
+
+        // Resolve property name to index.
+        ULONG index = totalPropCount; // sentinel = not found
+        if (pPropertyNames_) {
+            // Fast path: use the persistent name to index map shared across
+            // all events of the same type.
+            auto it = pPropertyNames_->find(name);
+            if (it != pPropertyNames_->end()) {
+                index = it->second;
+            }
+        } else {
+            // Fallback: linear scan of property names in the schema.
+            for (ULONG i = 0; i < totalPropCount; ++i) {
+                auto &propInfo = schema_.pSchema_->EventPropertyInfoArray[i];
+                const wchar_t *pName = reinterpret_cast<const wchar_t*>(
+                    reinterpret_cast<const BYTE*>(schema_.pSchema_) +
+                    propInfo.NameOffset);
+                if (name == pName) {
+                    index = i;
+                    break;
+                }
             }
         }
 
-        const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
+        if (index >= totalPropCount) {
+            return property_info();
+        }
+
+        // The first step is to use our cache for the property to see if we've
+        // discovered it already.
+        if (index < lastPropertyIndex_) {
+            return propertyCache_[index];
+        }
 
         assert((pBufferIndex_ <= pEndBuffer_ && pBufferIndex_ >= schema_.record_.UserData) &&
                "invariant: we should've already thrown for falling off the edge");
@@ -153,16 +181,13 @@ namespace krabs {
         // to find it. While we're going through the blob to find it, we'll
         // remember what we've seen to save time later.
         //
-        // Question: Why don't we just populate the cache before looking up any
-        //           properties and simplify our code (less state, etc)?
-        //
-        // Answer:   Doing that introduces overhead in the case that only a
-        //           subset of properties are needed. While this code is a bit
-        //           more complicated, we introduce no additional performance
-        //           overhead at runtime.
-        for (auto &i = lastPropertyIndex_; i < totalPropCount; ++i) {
+        // Note: The name-to-index map is built once per schema type (cheap
+        // metadata scan). But the blob walk below is lazy per-event -- we
+        // only walk forward to the requested index, avoiding overhead when
+        // only a subset of properties are needed.
+        while (lastPropertyIndex_ <= index) {
 
-            auto &currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[i];
+            auto &currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[lastPropertyIndex_];
             const wchar_t *pName = reinterpret_cast<const wchar_t*>(
                                         reinterpret_cast<const BYTE*>(schema_.pSchema_) +
                                         currentPropInfo.NameOffset);
@@ -179,26 +204,19 @@ namespace krabs {
             }
 
             property_info propInfo(pBufferIndex_, currentPropInfo, propertyLength);
-            cache_property(pName, propInfo);
+            cache_property(lastPropertyIndex_, propInfo);
 
             // advance the buffer index since we've already processed this property
             pBufferIndex_ += propertyLength;
-
-            // The property was found, return it
-            if (name == pName) {
-                // advance the index since we've already processed this property
-                ++i;
-                return propInfo;
-            }
+            lastPropertyIndex_++;
         }
 
-        // property wasn't found, return an empty propInfo
-        return property_info();
+        return propertyCache_[index];
     }
 
-    inline void parser::cache_property(const wchar_t *name, property_info propInfo)
+    inline void parser::cache_property(ULONG index, property_info info)
     {
-        propertyCache_.push_front(std::make_pair(name, propInfo));
+        propertyCache_[index] = info;
     }
 
     inline void throw_if_property_not_found(const property_info &propInfo)
@@ -227,7 +245,7 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    bool parser::try_parse(const std::wstring &name, T &out)
+    bool parser::try_parse(std::wstring_view name, T &out)
     {
         try {
             out = parse<T>(name);
@@ -252,7 +270,7 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    T parser::parse(const std::wstring &name)
+    T parser::parse(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -268,7 +286,7 @@ namespace krabs {
     }
 
     template<>
-    inline bool parser::parse<bool>(const std::wstring& name)
+    inline bool parser::parse<bool>(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -280,7 +298,7 @@ namespace krabs {
     }
 
     template <>
-    inline std::wstring parser::parse<std::wstring>(const std::wstring &name)
+    inline std::wstring parser::parse<std::wstring>(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -294,7 +312,7 @@ namespace krabs {
     }
 
     template <>
-    inline std::string parser::parse<std::string>(const std::wstring &name)
+    inline std::string parser::parse<std::string>(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -308,7 +326,7 @@ namespace krabs {
     }
 
     template<>
-    inline const counted_string* parser::parse<const counted_string*>(const std::wstring &name)
+    inline const counted_string* parser::parse<const counted_string*>(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -319,7 +337,7 @@ namespace krabs {
     }
 
     template<>
-    inline binary parser::parse<binary>(const std::wstring &name)
+    inline binary parser::parse<binary>(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -331,7 +349,7 @@ namespace krabs {
 
     template<>
     inline ip_address parser::parse<ip_address>(
-        const std::wstring &name)
+        std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -354,7 +372,7 @@ namespace krabs {
 
     template<>
     inline socket_address parser::parse<socket_address>(
-        const std::wstring &name)
+        std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -366,7 +384,7 @@ namespace krabs {
 
     template<>
     inline sid parser::parse<sid>(
-        const std::wstring& name)
+        std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -404,7 +422,7 @@ namespace krabs {
     }
 
     template<>
-    inline pointer parser::parse<pointer>(const std::wstring& name)
+    inline pointer parser::parse<pointer>(std::wstring_view name)
     {
         auto propInfo = find_property(name);
         throw_if_property_not_found(propInfo);
@@ -418,7 +436,7 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename Adapter>
-    auto parser::view_of(const std::wstring &name, Adapter &adapter)
+    auto parser::view_of(std::wstring_view name, Adapter &adapter)
         -> collection_view<typename Adapter::const_iterator>
     {
         auto propInfo = find_property(name);
