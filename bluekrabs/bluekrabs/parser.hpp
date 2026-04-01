@@ -34,6 +34,7 @@ namespace krabs {
     class parser {
     public:
 
+        static constexpr ULONG npos = ULONG(-1);
         /**
          * <summary>
          * Constructs an event parser from an event schema.
@@ -76,7 +77,7 @@ namespace krabs {
          * </remarks>
          */
         template <typename T>
-        bool try_parse(const std::wstring &name, T &out);
+        bool try_parse(const std::wstring &name, T &out, ULONG& index);
 
         /**
          * <summary>
@@ -85,7 +86,7 @@ namespace krabs {
          * </summary>
          */
         template <typename T>
-        T parse(const std::wstring &name);
+        T parse(const std::wstring &name, ULONG& index);
 
         /**
         * todo
@@ -102,6 +103,13 @@ namespace krabs {
 
     private:
         property_info find_property(const std::wstring &name);
+        property_info find_property_at(ULONG index);
+
+        inline property_info resolve_property(const std::wstring& name, ULONG index)
+        {
+            return (index != npos) ? find_property_at(index) : find_property(name);
+        }
+
         void cache_property(const wchar_t *name, property_info info);
 
     private:
@@ -206,6 +214,50 @@ namespace krabs {
         return property_info();
     }
 
+    inline property_info parser::find_property_at(ULONG index)
+    {
+        const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
+        if (index >= totalPropCount)
+            return property_info();
+
+        // Already advanced past this index — check cache by index position
+        if (index < lastPropertyIndex_)
+        {
+            // Cache is push_front, so index 0 is at back, etc.
+            auto cacheIdx = lastPropertyIndex_ - 1 - index;
+            if (cacheIdx < propertyCache_.size())
+                return propertyCache_[cacheIdx].second;
+        }
+
+        // Advance sequentially to the requested index
+        for (auto& i = lastPropertyIndex_; i <= index && i < totalPropCount; ++i)
+        {
+            auto& currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[i];
+            const wchar_t* pName = reinterpret_cast<const wchar_t*>(
+                reinterpret_cast<BYTE*>(schema_.pSchema_) +
+                currentPropInfo.NameOffset);
+
+            ULONG propertyLength = size_provider::get_property_size(
+                pBufferIndex_, pName, schema_.record_, currentPropInfo);
+
+            if (pBufferIndex_ + propertyLength > pEndBuffer_)
+                throw std::out_of_range("Property length past end of property buffer");
+
+            property_info propInfo(pBufferIndex_, currentPropInfo, propertyLength);
+            cache_property(pName, propInfo);
+
+            pBufferIndex_ += propertyLength;
+
+            if (i == index)
+            {
+                ++i;
+                return propInfo;
+            }
+        }
+
+        return property_info();
+    }
+
     inline void parser::cache_property(const wchar_t *name, property_info propInfo)
     {
         propertyCache_.push_front(std::make_pair(name, propInfo));
@@ -237,7 +289,7 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    bool parser::try_parse(const std::wstring &name, T &out)
+    bool parser::try_parse(const std::wstring &name, T &out, ULONG& index)
     {
         try {
             out = parse<T>(name);
@@ -262,9 +314,9 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    T parser::parse(const std::wstring &name)
+    T parser::parse(const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<T>(name, propInfo);
@@ -278,9 +330,9 @@ namespace krabs {
     }
 
     template<>
-    inline bool parser::parse<bool>(const std::wstring& name)
+    inline bool parser::parse<bool>(const std::wstring& name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<bool>(name, propInfo);
@@ -290,9 +342,9 @@ namespace krabs {
     }
 
     template <>
-    inline std::wstring parser::parse<std::wstring>(const std::wstring &name)
+    inline std::wstring parser::parse<std::wstring>(const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<std::wstring>(name, propInfo);
@@ -304,9 +356,9 @@ namespace krabs {
     }
 
     template <>
-    inline std::string parser::parse<std::string>(const std::wstring &name)
+    inline std::string parser::parse<std::string>(const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<std::string>(name, propInfo);
@@ -318,9 +370,9 @@ namespace krabs {
     }
 
     template<>
-    inline const counted_string* parser::parse<const counted_string*>(const std::wstring &name)
+    inline const counted_string* parser::parse<const counted_string*>(const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<const counted_string*>(name, propInfo);
@@ -329,9 +381,9 @@ namespace krabs {
     }
 
     template<>
-    inline binary parser::parse<binary>(const std::wstring &name)
+    inline binary parser::parse<binary>(const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         // no type asserts for binary - anything can be read as binary
@@ -341,9 +393,9 @@ namespace krabs {
 
     template<>
     inline ip_address parser::parse<ip_address>(
-        const std::wstring &name)
+        const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<ip_address>(name, propInfo);
@@ -364,9 +416,9 @@ namespace krabs {
 
     template<>
     inline socket_address parser::parse<socket_address>(
-        const std::wstring &name)
+        const std::wstring &name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<socket_address>(name, propInfo);
@@ -376,9 +428,9 @@ namespace krabs {
 
     template<>
     inline sid parser::parse<sid>(
-        const std::wstring& name)
+        const std::wstring& name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<sid>(name, propInfo);
@@ -414,9 +466,9 @@ namespace krabs {
     }
 
     template<>
-    inline pointer parser::parse<pointer>(const std::wstring& name)
+    inline pointer parser::parse<pointer>(const std::wstring& name, ULONG& index)
     {
-        auto propInfo = find_property(name);
+        auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
         krabs::debug::assert_valid_assignment<pointer>(name, propInfo);

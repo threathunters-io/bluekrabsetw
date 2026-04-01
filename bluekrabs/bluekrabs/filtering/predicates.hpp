@@ -137,7 +137,8 @@ namespace krabs { namespace predicates {
                 krabs::parser parser(schema);
 
                 try {
-                    return (expected_ == parser.parse<T>(property_));
+                    auto pi = krabs::parser::npos;
+                    return (expected_ == parser.parse<T>(property_, pi));
                 }
                 catch (...) {
                     return false;
