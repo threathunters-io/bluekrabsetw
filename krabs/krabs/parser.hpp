@@ -99,8 +99,6 @@ namespace krabs {
         const BYTE *pEndBuffer_;
         BYTE *pBufferIndex_;
         ULONG lastPropertyIndex_;
-        // Persistent name to index map shared across all events of the same type.
-        const property_name_map *pPropertyNames_;
         // Maintain a mapping from property index to blob data location.
         std::vector<property_info> propertyCache_;
     };
@@ -113,7 +111,6 @@ namespace krabs {
     , pEndBuffer_((BYTE*)s.record_.UserData + s.record_.UserDataLength)
     , pBufferIndex_((BYTE*)s.record_.UserData)
     , lastPropertyIndex_(0)
-    , pPropertyNames_(s.pPropertyNames_)
     , propertyCache_(s.pSchema_->PropertyCount)
     {}
 
@@ -127,25 +124,33 @@ namespace krabs {
         // A schema contains a collection of properties that are keyed by name.
         // These properties are stored in a blob of bytes that needs to be
         // interpreted according to information that is packaged up in the
-        // schema and that can be retrieved using the Tdh* APIs. This format
-        // requires a linear traversal over the blob, incrementing according to
-        // the contents within it. This is janky, so our strategy is to
-        // minimize this as much as possible via caching.
+        // schema and that can be retrieved using the Tdh* APIs.
 
         const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
 
-        // Resolve property name to index.
+        // Resolve property name to index via hinted linear scan.
+        // Optimisitically start at lastPropertyIndex_, then wrap around if not found.
+        // ** This assumes that callers typically access properties in event order. **
+        // An alternative is to maintain a static name->index map, but this was slower
+        // in practice for events with < ~12 properties.
+
         ULONG index = totalPropCount; // sentinel = not found
-        if (pPropertyNames_) {
-            // Fast path: use the persistent name to index map shared across
-            // all events of the same type.
-            auto it = pPropertyNames_->find(name);
-            if (it != pPropertyNames_->end()) {
-                index = it->second;
+
+        // Scan [lastPropertyIndex_..totalPropCount) first
+        for (ULONG i = lastPropertyIndex_; i < totalPropCount; ++i) {
+            auto &propInfo = schema_.pSchema_->EventPropertyInfoArray[i];
+            const wchar_t *pName = reinterpret_cast<const wchar_t*>(
+                reinterpret_cast<const BYTE*>(schema_.pSchema_) +
+                propInfo.NameOffset);
+            if (name == pName) {
+                index = i;
+                break;
             }
-        } else {
-            // Fallback: linear scan of property names in the schema.
-            for (ULONG i = 0; i < totalPropCount; ++i) {
+        }
+
+        if (index == totalPropCount) { // not found
+            // Scan the remainder [0..lastPropertyIndex_)
+            for (ULONG i = 0; i < lastPropertyIndex_; ++i) {
                 auto &propInfo = schema_.pSchema_->EventPropertyInfoArray[i];
                 const wchar_t *pName = reinterpret_cast<const wchar_t*>(
                     reinterpret_cast<const BYTE*>(schema_.pSchema_) +
@@ -157,7 +162,7 @@ namespace krabs {
             }
         }
 
-        if (index >= totalPropCount) {
+        if (index >= totalPropCount) { // not found
             return property_info();
         }
 
@@ -180,11 +185,9 @@ namespace krabs {
         // We've not looked up this property before, so we have to do the work
         // to find it. While we're going through the blob to find it, we'll
         // remember what we've seen to save time later.
-        //
-        // Note: The name-to-index map is built once per schema type (cheap
-        // metadata scan). But the blob walk below is lazy per-event -- we
-        // only walk forward to the requested index, avoiding overhead when
-        // only a subset of properties are needed.
+        // The blob walk is lazy per-event -- we only walk forward to the
+        // requested index, avoiding overhead when only a subset of properties
+        // are needed.
         while (lastPropertyIndex_ <= index) {
 
             auto &currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[lastPropertyIndex_];
