@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>Microsoft.O365.Security.Native.ETW</id>
-        <version>4.4.8</version>
+        <version>4.4.9</version>
         <title>Microsoft.O365.Security.Native.ETW - managed wrappers for krabsetw</title>
         <authors>Microsoft</authors>
         <owners>Microsoft</owners>
@@ -12,9 +12,9 @@
         <description>Microsoft.O365.Security.Native.ETW is a managed wrapper around the krabsetw ETW library.</description>
         <summary>Microsoft.O365.Security.Native.ETW is a managed wrapper around the krabsetw ETW library.</summary>
         <releaseNotes>
-            Version 4.4.8:
-              - Optimize parser property lookup with persistent name-to-index map
-              - Use std::wstring_view for parser property name parameters
+            Version 4.4.9:
+              - Optimize parser property lookup with last property hinted linear scan
+              - Add hinted parse/try_parse/view_of overloads accepting a ULONG property index hint
         </releaseNotes>
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <language />

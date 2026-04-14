@@ -80,6 +80,15 @@ namespace krabs {
 
         /**
          * <summary>
+         * Attempts to retrieve the given property by name and type,
+         * starting the name scan at the given hint index.
+         * </summary>
+         */
+        template <typename T>
+        bool try_parse(std::wstring_view name, T &out, ULONG hint);
+
+        /**
+         * <summary>
          * Attempts to parse the given property by name and type. If the
          * property does not exist, an exception is thrown.
          * </summary>
@@ -87,11 +96,24 @@ namespace krabs {
         template <typename T>
         T parse(std::wstring_view name);
 
+        /**
+         * <summary>
+         * Attempts to parse the given property by name and type,
+         * starting the name scan at the given hint index.
+         * </summary>
+         */
+        template <typename T>
+        T parse(std::wstring_view name, ULONG hint);
+
         template <typename Adapter>
         auto view_of(std::wstring_view name, Adapter &adapter) -> collection_view<typename Adapter::const_iterator>;
 
+        template <typename Adapter>
+        auto view_of(std::wstring_view name, ULONG hint, Adapter &adapter) -> collection_view<typename Adapter::const_iterator>;
+
     private:
         property_info find_property(std::wstring_view name);
+        property_info find_property(std::wstring_view name, ULONG hint);
         void cache_property(ULONG index, property_info info);
 
     private:
@@ -99,8 +121,7 @@ namespace krabs {
         const BYTE *pEndBuffer_;
         BYTE *pBufferIndex_;
         ULONG lastPropertyIndex_;
-        // Persistent name to index map shared across all events of the same type.
-        const property_name_map *pPropertyNames_;
+        ULONG nextHint_;
         // Maintain a mapping from property index to blob data location.
         std::vector<property_info> propertyCache_;
     };
@@ -113,7 +134,7 @@ namespace krabs {
     , pEndBuffer_((BYTE*)s.record_.UserData + s.record_.UserDataLength)
     , pBufferIndex_((BYTE*)s.record_.UserData)
     , lastPropertyIndex_(0)
-    , pPropertyNames_(s.pPropertyNames_)
+    , nextHint_(0)
     , propertyCache_(s.pSchema_->PropertyCount)
     {}
 
@@ -124,42 +145,47 @@ namespace krabs {
 
     inline property_info parser::find_property(std::wstring_view name)
     {
+        return find_property(name, nextHint_);
+    }
+
+    inline property_info parser::find_property(std::wstring_view name, ULONG hint)
+    {
         // A schema contains a collection of properties that are keyed by name.
         // These properties are stored in a blob of bytes that needs to be
         // interpreted according to information that is packaged up in the
-        // schema and that can be retrieved using the Tdh* APIs. This format
-        // requires a linear traversal over the blob, incrementing according to
-        // the contents within it. This is janky, so our strategy is to
-        // minimize this as much as possible via caching.
+        // schema and that can be retrieved using the Tdh* APIs.
 
         const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
-
-        // Resolve property name to index.
-        ULONG index = totalPropCount; // sentinel = not found
-        if (pPropertyNames_) {
-            // Fast path: use the persistent name to index map shared across
-            // all events of the same type.
-            auto it = pPropertyNames_->find(name);
-            if (it != pPropertyNames_->end()) {
-                index = it->second;
-            }
-        } else {
-            // Fallback: linear scan of property names in the schema.
-            for (ULONG i = 0; i < totalPropCount; ++i) {
-                auto &propInfo = schema_.pSchema_->EventPropertyInfoArray[i];
-                const wchar_t *pName = reinterpret_cast<const wchar_t*>(
-                    reinterpret_cast<const BYTE*>(schema_.pSchema_) +
-                    propInfo.NameOffset);
-                if (name == pName) {
-                    index = i;
-                    break;
-                }
-            }
-        }
-
-        if (index >= totalPropCount) {
+        if (totalPropCount == 0) {
             return property_info();
         }
+
+        // Resolve property name to index via hinted linear scan.
+        // Optimistically start at hint, then wrap around if not found.
+        // ** This assumes that callers typically access properties in event order. **
+        // An alternative is to maintain a static name->index map, but this was slower
+        // in practice for events with < ~12 properties.
+
+        if (hint >= totalPropCount) hint = 0;
+
+        ULONG index = totalPropCount; // sentinel = not found
+        for (ULONG n = 0; n < totalPropCount; ++n) {
+            const ULONG i = (hint + n) % totalPropCount;
+            const auto &propInfo = schema_.pSchema_->EventPropertyInfoArray[i];
+            const wchar_t *pName = reinterpret_cast<const wchar_t*>(
+                reinterpret_cast<const BYTE*>(schema_.pSchema_) +
+                propInfo.NameOffset);
+            if (name == pName) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index >= totalPropCount) { // not found
+            return property_info();
+        }
+
+        nextHint_ = (index + 1) % totalPropCount;
 
         // The first step is to use our cache for the property to see if we've
         // discovered it already.
@@ -180,11 +206,9 @@ namespace krabs {
         // We've not looked up this property before, so we have to do the work
         // to find it. While we're going through the blob to find it, we'll
         // remember what we've seen to save time later.
-        //
-        // Note: The name-to-index map is built once per schema type (cheap
-        // metadata scan). But the blob walk below is lazy per-event -- we
-        // only walk forward to the requested index, avoiding overhead when
-        // only a subset of properties are needed.
+        // The blob walk is lazy per-event -- we only walk forward to the
+        // requested index, avoiding overhead when only a subset of properties
+        // are needed.
         while (lastPropertyIndex_ <= index) {
 
             auto &currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[lastPropertyIndex_];
@@ -245,6 +269,13 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
+    bool parser::try_parse(std::wstring_view name, T &out, ULONG hint)
+    {
+        nextHint_ = hint;
+        return try_parse(name, out);
+    }
+
+    template <typename T>
     bool parser::try_parse(std::wstring_view name, T &out)
     {
         try {
@@ -268,6 +299,13 @@ namespace krabs {
 
     // parse
     // ------------------------------------------------------------------------
+
+    template <typename T>
+    T parser::parse(std::wstring_view name, ULONG hint)
+    {
+        nextHint_ = hint;
+        return parse<T>(name);
+    }
 
     template <typename T>
     T parser::parse(std::wstring_view name)
@@ -434,6 +472,14 @@ namespace krabs {
 
     // view_of
     // ------------------------------------------------------------------------
+
+    template <typename Adapter>
+    auto parser::view_of(std::wstring_view name, ULONG hint, Adapter &adapter)
+        -> collection_view<typename Adapter::const_iterator>
+    {
+        nextHint_ = hint;
+        return view_of(name, adapter);
+    }
 
     template <typename Adapter>
     auto parser::view_of(std::wstring_view name, Adapter &adapter)
