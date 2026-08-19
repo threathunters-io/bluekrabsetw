@@ -81,12 +81,33 @@ namespace krabs {
 
         /**
          * <summary>
+         * Attempts to retrieve the given property by name and type.
+         * </summary>
+         * <remarks>
+         * Type hinting here is taken as the authoritative source. There is no
+         * validation that the request for type is correct.
+         * </remarks>
+         */
+        template <typename T>
+        bool try_parse(const std::wstring &name, T &out);
+
+        /**
+         * <summary>
          * Attempts to parse the given property by name and type. If the
          * property does not exist, an exception is thrown.
          * </summary>
          */
         template <typename T>
         T parse(const std::wstring &name, ULONG& index);
+
+        /**
+         * <summary>
+         * Attempts to parse the given property by name and type. If the
+         * property does not exist, an exception is thrown.
+         * </summary>
+         */
+        template <typename T>
+        T parse(const std::wstring &name);
 
         /**
         * todo
@@ -335,7 +356,7 @@ namespace krabs {
     bool parser::try_parse(const std::wstring &name, T &out, ULONG& index)
     {
         try {
-            out = parse<T>(name);
+            out = parse<T>(name, index);
             return true;
         }
 
@@ -353,8 +374,22 @@ namespace krabs {
         }
     }
 
+    template <typename T>
+    bool parser::try_parse(const std::wstring &name, T &out)
+    {
+        ULONG index = npos;
+        return try_parse<T>(name, out, index);
+    }
+
     // parse
     // ------------------------------------------------------------------------
+
+    template <typename T>
+    T parser::parse(const std::wstring &name)
+    {
+        ULONG index = npos;
+        return parse<T>(name, index);
+    }
 
     template <typename T>
     T parser::parse(const std::wstring &name, ULONG& index)
@@ -362,7 +397,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<T>(name, propInfo);
+        krabs::debug::assert_valid_assignment<T>(name, propInfo, schema_.pSchema_);
 
         // ensure that size of the type we are requesting is
         // the same size of the property in the event
@@ -378,7 +413,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<bool>(name, propInfo);
+        krabs::debug::assert_valid_assignment<bool>(name, propInfo, schema_.pSchema_);
 
         // Boolean in ETW is 4 bytes long
         return static_cast<bool>(*(unsigned*)propInfo.pointer_in(pUserData_));
@@ -390,7 +425,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<std::wstring>(name, propInfo);
+        krabs::debug::assert_valid_assignment<std::wstring>(name, propInfo, schema_.pSchema_);
 
         auto string = reinterpret_cast<const wchar_t*>(propInfo.pointer_in(pUserData_));
         auto length = get_string_content_length(string, propInfo.length_);
@@ -404,7 +439,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<std::string>(name, propInfo);
+        krabs::debug::assert_valid_assignment<std::string>(name, propInfo, schema_.pSchema_);
 
         auto string = reinterpret_cast<const char*>(propInfo.pointer_in(pUserData_));
         auto length = get_string_content_length(string, propInfo.length_);
@@ -418,7 +453,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<const counted_string*>(name, propInfo);
+        krabs::debug::assert_valid_assignment<const counted_string*>(name, propInfo, schema_.pSchema_);
 
         return reinterpret_cast<const counted_string*>(propInfo.pointer_in(pUserData_));
     }
@@ -441,7 +476,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<ip_address>(name, propInfo);
+        krabs::debug::assert_valid_assignment<ip_address>(name, propInfo, schema_.pSchema_);
 
         auto outType = propInfo.info_in(schema_.pSchema_).nonStructType.OutType;
 
@@ -464,7 +499,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<socket_address>(name, propInfo);
+        krabs::debug::assert_valid_assignment<socket_address>(name, propInfo, schema_.pSchema_);
 
         return socket_address::from_bytes(propInfo.pointer_in(pUserData_), propInfo.length_);
     }
@@ -476,7 +511,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<sid>(name, propInfo);
+        krabs::debug::assert_valid_assignment<sid>(name, propInfo, schema_.pSchema_);
         auto InType = propInfo.info_in(schema_.pSchema_).nonStructType.InType;
 
         // A WBEMSID is actually a TOKEN_USER structure followed by the SID.
@@ -514,7 +549,7 @@ namespace krabs {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
 
-        krabs::debug::assert_valid_assignment<pointer>(name, propInfo);
+        krabs::debug::assert_valid_assignment<pointer>(name, propInfo, schema_.pSchema_);
 
         return pointer::from_bytes(propInfo.pointer_in(pUserData_), propInfo.length_);
     }

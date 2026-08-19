@@ -1,5 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Copyright (c) Microsoft. All rights reserved.                                           
+  // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #pragma once
 
@@ -53,7 +53,7 @@ namespace krabs {
             CASE_IN_TYPE(SIZET);
             CASE_IN_TYPE(HEXDUMP);
             CASE_IN_TYPE(WBEMSID);
-            default: return "<INVALID VALUE>";
+        default: return "<INVALID VALUE>";
         }
     }
 
@@ -106,7 +106,7 @@ namespace krabs {
             CASE_OUT_TYPE(DATETIME_UTC);
             CASE_OUT_TYPE(REDUCEDSTRING);
             CASE_OUT_TYPE(NOPRINT);
-            default: return "<INVALID VALUE>";
+        default: return "<INVALID VALUE>";
         }
     }
 
@@ -126,8 +126,14 @@ namespace krabs {
         // throws in debug to let us know that we are trying to parse a
         // type that does not have any assignment validation. This compiles
         // to a no-op in release.
+        //
+        // The TRACE_EVENT_INFO* is used to reconstruct the EVENT_PROPERTY_INFO
+        // via property_info::info_in(schema) — property_info itself is
+        // position-independent (no pEventPropertyInfo_ pointer).
         template <typename T>
-        inline void assert_valid_assignment(const std::wstring&, const property_info&)
+        inline void assert_valid_assignment(const std::wstring&,
+            const property_info&,
+            const TRACE_EVENT_INFO*)
         {
 #ifndef NDEBUG
 
@@ -148,15 +154,16 @@ namespace krabs {
         inline void throw_if_invalid(
             const std::wstring& name,
             const property_info& info,
+            const TRACE_EVENT_INFO* schema,
             _TDH_IN_TYPE requested)
         {
-            auto actual = (_TDH_IN_TYPE)info.pEventPropertyInfo_->nonStructType.InType;
+            auto actual = (_TDH_IN_TYPE)info.info_in(schema).nonStructType.InType;
 
             if (requested == actual) return;
 
 #pragma warning(push)
 #pragma warning(disable: 4244) // narrowing property name wchar_t to char for this error message
-            std::string ansiName(name.begin(), name.end());
+                std::string ansiName(name.begin(), name.end());
 #pragma warning(pop)
 
             throw type_mismatch_assert(
@@ -170,22 +177,24 @@ namespace krabs {
         // of the unspecialized version defined above. This allows us to have
         // type-driven assertions only in debug builds.
 
-#define BUILD_ASSERT(type, tdh_type) \
-        template <> \
-        inline void assert_valid_assignment<type>(               \
-            const std::wstring& name, const property_info& info) \
-        {                                                        \
-            throw_if_invalid(name, info, tdh_type);              \
-        }
+#define BUILD_ASSERT(type, tdh_type)                                      \
+          template <>                                                       \
+          inline void assert_valid_assignment<type>(                        \
+              const std::wstring& name,                                     \
+              const property_info& info,                                    \
+              const TRACE_EVENT_INFO* schema)                               \
+          {                                                                 \
+              throw_if_invalid(name, info, schema, tdh_type);               \
+          }
 
-        // NOTE: don't just blindly add assertions here, some types
-        // that seem trivial (e.g. bool) are not because of differences
-        // between the representation in C++ and the representation in ETW.
-        // Ensure that type sizes match and that the ETW form isn't
-        // a variant or variable length. A type that requires a specialized
-        // assertion will also require a specialized parser.
+          // NOTE: don't just blindly add assertions here, some types
+          // that seem trivial (e.g. bool) are not because of differences
+          // between the representation in C++ and the representation in ETW.
+          // Ensure that type sizes match and that the ETW form isn't
+          // a variant or variable length. A type that requires a specialized
+          // assertion will also require a specialized parser.
 
-        // strings
+          // strings
         BUILD_ASSERT(std::wstring, TDH_INTYPE_UNICODESTRING);
         BUILD_ASSERT(std::string, TDH_INTYPE_ANSISTRING);
         BUILD_ASSERT(const counted_string*, TDH_INTYPE_COUNTEDSTRING);
@@ -212,9 +221,11 @@ namespace krabs {
 
         template <>
         inline void assert_valid_assignment<ip_address>(
-            const std::wstring&, const property_info& info)
+            const std::wstring&,
+            const property_info& info,
+            const TRACE_EVENT_INFO* schema)
         {
-            auto outType = info.pEventPropertyInfo_->nonStructType.OutType;
+            auto outType = info.info_in(schema).nonStructType.OutType;
 
             if (outType != TDH_OUTTYPE_IPV6 &&
                 outType != TDH_OUTTYPE_IPV4) {
@@ -225,9 +236,11 @@ namespace krabs {
 
         template <>
         inline void assert_valid_assignment<socket_address>(
-            const std::wstring&, const property_info& info)
+            const std::wstring&,
+            const property_info& info,
+            const TRACE_EVENT_INFO* schema)
         {
-            auto outType = info.pEventPropertyInfo_->nonStructType.OutType;
+            auto outType = info.info_in(schema).nonStructType.OutType;
 
             if (outType != TDH_OUTTYPE_SOCKETADDRESS) {
                 throw std::runtime_error(
@@ -237,9 +250,11 @@ namespace krabs {
 
         template <>
         inline void assert_valid_assignment<sid>(
-            const std::wstring&, const property_info& info)
+            const std::wstring&,
+            const property_info& info,
+            const TRACE_EVENT_INFO* schema)
         {
-            auto inType = info.pEventPropertyInfo_->nonStructType.InType;
+            auto inType = info.info_in(schema).nonStructType.InType;
 
             if (inType != TDH_INTYPE_WBEMSID && inType != TDH_INTYPE_SID) {
                 throw std::runtime_error(
@@ -249,9 +264,11 @@ namespace krabs {
 
         template <>
         inline void assert_valid_assignment<pointer>(
-            const std::wstring&, const property_info& info)
+            const std::wstring&,
+            const property_info& info,
+            const TRACE_EVENT_INFO* schema)
         {
-            auto inType = info.pEventPropertyInfo_->nonStructType.InType;
+            auto inType = info.info_in(schema).nonStructType.InType;
 
             if (inType != TDH_INTYPE_POINTER) {
                 throw std::runtime_error(
@@ -261,9 +278,11 @@ namespace krabs {
 
         template <>
         inline void assert_valid_assignment<bool>(
-            const std::wstring&, const property_info& info)
+            const std::wstring&,
+            const property_info& info,
+            const TRACE_EVENT_INFO* schema)
         {
-            auto inType = info.pEventPropertyInfo_->nonStructType.InType;
+            auto inType = info.info_in(schema).nonStructType.InType;
 
             if (inType != TDH_INTYPE_BOOLEAN) {
                 throw std::runtime_error(
