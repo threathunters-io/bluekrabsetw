@@ -195,33 +195,86 @@ namespace krabs {
 
     /**
      * <summary>
-     * Holds information about an property extracted from the etw schema
+     * Holds position-independent information about a property extracted from
+     * the etw schema. All fields are relative to the record's UserData (or an
+     * equivalent flat copy), so instances can be cached across events and
+     * reused against any buffer holding the same wire bytes.
      * </summary>
+     * <remarks>
+     * Invariant: offset_ is valid iff length_ is valid. A property whose
+     * offset depends on a preceding variable-length property has
+     * offset_ == npos even if its own length is schema-fixed.
+     * </remarks>
      */
     struct property_info {
-        const BYTE *pPropertyIndex_;
-        const EVENT_PROPERTY_INFO *pEventPropertyInfo_;
-        ULONG length_;
+        static constexpr ULONG npos = ULONG(-1);
 
-        property_info(
-            const BYTE *offset,
-            const EVENT_PROPERTY_INFO &evtPropInfo,
-            ULONG length)
-            : pPropertyIndex_(offset)
-            , pEventPropertyInfo_(&evtPropInfo)
+        ULONG offset_;          // bytes from UserData start; npos if unknown (per-event)
+        ULONG length_;          // property length in bytes; npos if unknown (per-event)
+        ULONG property_index_;  // index into TRACE_EVENT_INFO::EventPropertyInfoArray
+
+        property_info(ULONG offset, ULONG length, ULONG index)
+            : offset_(offset)
             , length_(length)
+            , property_index_(index)
         { }
 
         property_info()
-            : pPropertyIndex_(nullptr)
-            , pEventPropertyInfo_(nullptr)
-            , length_(0)
+            : offset_(npos)
+            , length_(npos)
+            , property_index_(npos)
         { }
 
         inline bool found() const
         {
-            return pPropertyIndex_ != nullptr;
+            return property_index_ != npos;
         }
+
+        inline bool has_offset() const { return offset_ != npos; }
+        inline bool has_length() const { return length_ != npos; }
+
+        // Reconstruct an absolute pointer to the property bytes against a raw
+        // buffer holding the record's UserData (or an arena-copied equivalent).
+        inline const BYTE* pointer_in(const BYTE* raw) const
+        {
+            return raw + offset_;
+        }
+
+        // Reconstruct the schema entry for this property. `schema` is the
+        // TRACE_EVENT_INFO pointer for the record's descriptor (available via
+        // schema_locator).
+        inline const EVENT_PROPERTY_INFO& info_in(const TRACE_EVENT_INFO* schema) const
+        {
+            return schema->EventPropertyInfoArray[property_index_];
+        }
+    };
+
+    static_assert(sizeof(property_info) == 12,
+                  "property_info must stay 12 bytes for cache density");
+
+    /**
+     * <summary>
+     * Per-descriptor property layout. One instance per descriptor; owned by
+     * schema_locator, filled lazily by parser during walks. Accessed from
+     * user code via class schema's layout() accessor.
+     * </summary>
+     * <remarks>
+     * Contract: entries[i].offset_ / .length_ are npos until resolved.
+     * Once i &lt; fixed_count, entries[i] holds cached offset+length good
+     * for every future event of this descriptor. Entries past fixed_count
+     * may still cache length_ (schema-fixed length) even if offset_ is
+     * per-event.
+     * </remarks>
+     */
+    struct property_layout {
+        std::vector<property_info> entries;
+        ULONG                      fixed_count;
+        ULONG                      prefix_byte_end;
+
+        property_layout()
+            : fixed_count(0)
+            , prefix_byte_end(0)
+        { }
     };
 
     /**
