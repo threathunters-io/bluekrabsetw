@@ -262,9 +262,19 @@ namespace krabs {
         */
         std::vector<ULONG_PTR> stack_trace() const;
 
+    public:
+        /**
+         * <summary>
+         * Access this event's descriptor property layout. Filled lazily as
+         * the parser walks events of this descriptor.
+         * </summary>
+         */
+        property_layout& layout() const { return *pLayout_; }
+
     private:
         const EVENT_RECORD &record_;
-        TRACE_EVENT_INFO *pSchema_;
+        TRACE_EVENT_INFO   *pSchema_;
+        property_layout    *pLayout_;
 
     private:
         friend std::wstring event_name(const schema &);
@@ -289,10 +299,13 @@ namespace krabs {
     // Implementation
     // ------------------------------------------------------------------------
 
-    inline schema::schema(const EVENT_RECORD &record, const krabs::schema_locator &schema_locator)
+    inline schema::schema(const EVENT_RECORD &record, const krabs::schema_locator &locator)
         : record_(record)
-        , pSchema_(schema_locator.get_event_schema(record))
-    { }
+        , pSchema_(nullptr)
+        , pLayout_(nullptr)
+    {
+        locator.get(record, pSchema_, pLayout_);
+    }
 
     inline bool schema::operator==(const schema &other) const
     {

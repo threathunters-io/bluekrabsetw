@@ -12,7 +12,6 @@
 #include <windows.h>
 #include <tdh.h>
 #include <evntrace.h>
-#include <mutex>
 
 #include <memory>
 #include <unordered_map>
@@ -20,6 +19,7 @@
 #include "compiler_check.hpp"
 #include "errors.hpp"
 #include "guid.hpp"
+#include "parse_types.hpp"   // for property_layout
 
 #pragma comment(lib, "tdh.lib")
 
@@ -95,43 +95,78 @@ namespace krabs {
 
     /**
      * <summary>
-     * Fetches and caches schemas from TDH.
-     * NOTE: this cache also reduces the number of managed to native transitions
-     * when krabs is compiled into a managed assembly.
+     * Fetches and caches schemas from TDH, and stores per-descriptor
+     * property layouts filled lazily by parser walks.
+     *
+     * NOTE: this cache also reduces the number of managed to native
+     * transitions when krabs is compiled into a managed assembly.
      * </summary>
+     * <remarks>
+     * NOT thread-safe. Callers must ensure serialized access — this matches
+     * the ETW callback model (one dedicated thread per session). If parsing
+     * is later offloaded to multiple threads sharing one schema_locator,
+     * external synchronization is required.
+     * </remarks>
      */
     class schema_locator {
     public:
 
         /**
          * <summary>
-         * Retrieves the event schema from the cache or falls back to
-         * TDH to load the schema.
+         * Retrieves schema + property layout for this record's descriptor,
+         * allocating them on first sight. Both references are stable for
+         * the lifetime of the schema_locator.
+         * </summary>
+         */
+        void get(const EVENT_RECORD& record,
+                 PTRACE_EVENT_INFO&  out_schema,
+                 property_layout*&   out_layout) const;
+
+        /**
+         * <summary>
+         * Legacy accessor kept for backward compatibility. Returns only
+         * the schema pointer; internally delegates to get().
          * </summary>
          */
         const PTRACE_EVENT_INFO get_event_schema(const EVENT_RECORD &record) const;
 
     private:
-        mutable std::unordered_map<schema_key, std::unique_ptr<char[]>> cache_;
-        mutable std::mutex cache_mutex_;
+        struct entry {
+            std::unique_ptr<char[]>          buffer;
+            std::unique_ptr<property_layout> layout;
+        };
+        mutable std::unordered_map<schema_key, entry> cache_;
     };
 
     // Implementation
     // ------------------------------------------------------------------------
 
-    inline const PTRACE_EVENT_INFO schema_locator::get_event_schema(const EVENT_RECORD &record) const
+    inline void schema_locator::get(
+        const EVENT_RECORD& record,
+        PTRACE_EVENT_INFO&  out_schema,
+        property_layout*&   out_layout) const
     {
-        std::lock_guard<std::mutex> lock(cache_mutex_);
-        // check the cache
-        auto key = schema_key(record);
-        auto& buffer = cache_[key];
+        // NOT thread-safe; see class-level remarks.
+        auto& e = cache_[schema_key(record)];
 
-        if (!buffer) {
-            auto temp = get_event_schema_from_tdh(record);
-            buffer.swap(temp);
+        if (!e.buffer) {
+            e.buffer = get_event_schema_from_tdh(record);
+            auto schema = (PTRACE_EVENT_INFO)(e.buffer.get());
+
+            e.layout = std::make_unique<property_layout>();
+            e.layout->entries.assign(schema->PropertyCount, property_info{});
         }
 
-        return (PTRACE_EVENT_INFO)(buffer.get());
+        out_schema = (PTRACE_EVENT_INFO)(e.buffer.get());
+        out_layout = e.layout.get();
+    }
+
+    inline const PTRACE_EVENT_INFO schema_locator::get_event_schema(const EVENT_RECORD &record) const
+    {
+        PTRACE_EVENT_INFO s = nullptr;
+        property_layout*  l = nullptr;
+        get(record, s, l);
+        return s;
     }
 
     inline std::unique_ptr<char[]> get_event_schema_from_tdh(const EVENT_RECORD &record)
