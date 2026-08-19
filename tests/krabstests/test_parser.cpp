@@ -117,7 +117,8 @@ namespace krabstests
             krabs::parser parser(schema);
 
             // note: binary doesn't type check
-            auto data = parser.parse<krabs::binary>(L"ContextInfo");
+            auto npos = krabs::parser::npos;
+            auto data = parser.parse<krabs::binary>(L"ContextInfo", npos);
             Assert::AreEqual((size_t)16, data.bytes().size());
             Assert::AreEqual((BYTE)'T', data.bytes()[0]);
         }
