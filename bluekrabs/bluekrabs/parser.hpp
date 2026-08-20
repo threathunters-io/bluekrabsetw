@@ -10,12 +10,15 @@
 
 #include <functional>
 
+#include <type_traits>
+
 #include "compiler_check.hpp"
 #include "collection_view.hpp"
 #include "property.hpp"
 #include "parse_types.hpp"
 #include "size_provider.hpp"
 #include "tdh_helpers.hpp"
+#include "views.hpp"
 
 namespace krabs {
 
@@ -121,6 +124,26 @@ namespace krabs {
 
         template <typename Adapter>
         auto view_of(const std::wstring& name, Adapter& adapter) -> collection_view<typename Adapter::const_iterator>;
+
+        /**
+         * <summary>
+         * Return a typed view over the property at `index`. View is 8 bytes
+         * ({offset, length}) and is returned by register. Codegen'd kind
+         * classes call this with a pre-resolved index and a schema-selected
+         * View type.
+         * </summary>
+         * <remarks>
+         * Position-independent: the returned view can be materialized against
+         * any buffer holding the same wire bytes (record UserData or an
+         * arena-copied equivalent) via View::data(base).
+         *
+         * No type check — codegen is responsible for picking the View type
+         * that matches the schema property. Passing wstring_view for a POD
+         * property yields undefined bytes when the view is dereferenced.
+         * </remarks>
+         */
+        template <typename View>
+        View view_at(ULONG index);
 
     private:
         property_info find_property(const std::wstring& name);
@@ -631,5 +654,19 @@ namespace krabs {
         // TODO: type asserts?
 
         return adapter(propInfo, pUserData_);
+    }
+
+    // view_at
+    // ------------------------------------------------------------------------
+
+    template <typename View>
+    inline View parser::view_at(ULONG index)
+    {
+        static_assert(std::is_base_of<krabs::detail::byte_range, View>::value,
+                      "view_at<View>: View must derive from krabs::detail::byte_range");
+
+        property_info pi = find_property_at(index);
+        krabs::debug::assert_view_type<View>(pi, schema_.pSchema_);
+        return View(pi.offset_, pi.length_);
     }
 }

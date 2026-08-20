@@ -292,6 +292,107 @@ namespace krabs {
 
 #endif // NDEBUG
 
+        // -------------------------------------------------------------------
+        // View-type schema assertions. Codegen'd kind classes call
+        // parser::view_at<View>(index); these assertions verify View matches
+        // the schema's declared type. Zero cost in release (empty template);
+        // throws in debug when View doesn't match the schema's InType.
+        // -------------------------------------------------------------------
+
+        // Catch-all — accepts any View, no-op in both debug and release.
+        // Specialized below for each concrete view type in debug builds.
+        template <typename View>
+        inline void assert_view_type(const property_info&, const TRACE_EVENT_INFO*)
+        { }
+
+#ifndef NDEBUG
+
+        // Forward decls of view types (defined in views.hpp).
+        struct wstring_view_tag {};
+        struct string_view_tag {};
+        struct sid_view_tag {};
+        struct binary_view_tag {};
+        struct counted_string_view_tag {};
+        struct socket_address_view_tag {};
+
+    } /* namespace debug */
+} /* namespace krabs */
+
+#include "views.hpp"
+
+namespace krabs { namespace debug {
+
+        inline void throw_view_type_mismatch(
+            const char* view_name,
+            _TDH_IN_TYPE actual,
+            const char* expected)
+        {
+            throw type_mismatch_assert(view_name,
+                                       in_type_to_string(actual),
+                                       expected);
+        }
+
+        template <>
+        inline void assert_view_type<wstring_view>(
+            const property_info& info, const TRACE_EVENT_INFO* schema)
+        {
+            auto in = (_TDH_IN_TYPE)info.info_in(schema).nonStructType.InType;
+            if (in != TDH_INTYPE_UNICODESTRING) {
+                throw_view_type_mismatch("view_at<wstring_view>", in, "UNICODESTRING");
+            }
+        }
+
+        template <>
+        inline void assert_view_type<string_view>(
+            const property_info& info, const TRACE_EVENT_INFO* schema)
+        {
+            auto in = (_TDH_IN_TYPE)info.info_in(schema).nonStructType.InType;
+            if (in != TDH_INTYPE_ANSISTRING) {
+                throw_view_type_mismatch("view_at<string_view>", in, "ANSISTRING");
+            }
+        }
+
+        template <>
+        inline void assert_view_type<sid_view>(
+            const property_info& info, const TRACE_EVENT_INFO* schema)
+        {
+            auto in = (_TDH_IN_TYPE)info.info_in(schema).nonStructType.InType;
+            if (in != TDH_INTYPE_SID && in != TDH_INTYPE_WBEMSID) {
+                throw_view_type_mismatch("view_at<sid_view>", in, "SID or WBEMSID");
+            }
+        }
+
+        template <>
+        inline void assert_view_type<binary_view>(
+            const property_info&, const TRACE_EVENT_INFO*)
+        {
+            // Any property is legitimately readable as raw binary.
+        }
+
+        template <>
+        inline void assert_view_type<counted_string_view>(
+            const property_info& info, const TRACE_EVENT_INFO* schema)
+        {
+            auto in = (_TDH_IN_TYPE)info.info_in(schema).nonStructType.InType;
+            if (in != TDH_INTYPE_COUNTEDSTRING) {
+                throw_view_type_mismatch("view_at<counted_string_view>", in, "COUNTEDSTRING");
+            }
+        }
+
+        template <>
+        inline void assert_view_type<socket_address_view>(
+            const property_info& info, const TRACE_EVENT_INFO* schema)
+        {
+            auto out = (_TDH_OUT_TYPE)info.info_in(schema).nonStructType.OutType;
+            if (out != TDH_OUTTYPE_SOCKETADDRESS) {
+                throw type_mismatch_assert("view_at<socket_address_view>",
+                                           out_type_to_string(out),
+                                           "SOCKETADDRESS");
+            }
+        }
+
+#endif // NDEBUG
+
     } /* namespace debug */
 
 } /* namespace krabs */
