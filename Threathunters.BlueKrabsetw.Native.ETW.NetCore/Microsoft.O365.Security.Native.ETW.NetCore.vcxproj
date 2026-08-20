@@ -152,7 +152,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\bluekrabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>5271;4679;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5271;4679</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -182,7 +182,7 @@ xcopy "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Micro
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\krabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5271;4679</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -215,7 +215,7 @@ xcopy "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Micro
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\bluekrabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5271;4679</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -237,7 +237,7 @@ xcopy "C:\Program Files (x86)\Microsoft SDKs\Windows Kits\10\ExtensionSDKs\Micro
       <AdditionalIncludeDirectories>$(ProjectDir)..\inc;$(ProjectDir)..\krabs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>5271</DisableSpecificWarnings>
+      <DisableSpecificWarnings>5271;4679</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

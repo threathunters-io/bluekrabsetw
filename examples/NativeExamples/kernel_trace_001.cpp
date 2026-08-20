@@ -20,9 +20,9 @@ void kernel_trace_001::start()
     // enabled without krabs being updated, the same thing could be done like so:
     //    krabs::kernel_provider provider(SOME_ULONG_FLAG_VALUE, SOME_GUID);
     krabs::kernel::image_load_provider provider;
-
+    int c = 0;
     // Kernel providers accept all the typical callback mechanisms.
-    provider.add_on_event_callback([](const EVENT_RECORD &record, const krabs::trace_context &trace_context) {
+    provider.add_on_event_callback([&c](const EVENT_RECORD &record, const krabs::trace_context &trace_context) {
         krabs::schema schema(record, trace_context.schema_locator);
 
         // To filter our events, we want to compare against the
@@ -33,8 +33,15 @@ void kernel_trace_001::start()
         // https://msdn.microsoft.com/en-us/library/windows/desktop/aa364068(v=vs.85).aspx
         if (schema.event_opcode() == 10) {
             krabs::parser parser(schema);
-            std::wstring filename = parser.parse<std::wstring>(L"FileName");
-            std::wcout << L"Loaded image from file " << filename << std::endl;
+           
+			ULONG idx = 13; // FileName property index
+            std::wstring filename = parser.parse<std::wstring>(L"FileName",idx);
+            if (c==100)
+            {
+                std::wcout << L"Loaded image from file " << filename << std::endl;
+                c = 0;
+            }
+            c++;
         }
     });
 

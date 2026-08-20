@@ -47,7 +47,7 @@ namespace krabs {
          *     }
          * </example>
          */
-        parser(const schema &);
+        parser(const schema&);
 
         /**
          * <summary>
@@ -77,7 +77,7 @@ namespace krabs {
          * </remarks>
          */
         template <typename T>
-        bool try_parse(const std::wstring &name, T &out, ULONG& index);
+        bool try_parse(const std::wstring& name, T& out, ULONG& index);
 
         /**
          * <summary>
@@ -89,7 +89,7 @@ namespace krabs {
          * </remarks>
          */
         template <typename T>
-        bool try_parse(const std::wstring &name, T &out);
+        bool try_parse(const std::wstring& name, T& out);
 
         /**
          * <summary>
@@ -98,7 +98,7 @@ namespace krabs {
          * </summary>
          */
         template <typename T>
-        T parse(const std::wstring &name, ULONG& index);
+        T parse(const std::wstring& name, ULONG& index);
 
         /**
          * <summary>
@@ -107,7 +107,7 @@ namespace krabs {
          * </summary>
          */
         template <typename T>
-        T parse(const std::wstring &name);
+        T parse(const std::wstring& name);
 
         /**
         * todo
@@ -120,10 +120,10 @@ namespace krabs {
         std::pair<const char*, _TDH_OUT_TYPE> parse_out_type(const std::wstring& name);
 
         template <typename Adapter>
-        auto view_of(const std::wstring &name, Adapter &adapter) -> collection_view<typename Adapter::const_iterator>;
+        auto view_of(const std::wstring& name, Adapter& adapter) -> collection_view<typename Adapter::const_iterator>;
 
     private:
-        property_info find_property(const std::wstring &name);
+        property_info find_property(const std::wstring& name);
         property_info find_property_at(ULONG index);
 
         inline property_info resolve_property(const std::wstring& name, ULONG index)
@@ -131,126 +131,219 @@ namespace krabs {
             return (index != npos) ? find_property_at(index) : find_property(name);
         }
 
-    private:
-        const schema &schema_;
-        const BYTE *pUserData_;      // base pointer for property_info::pointer_in()
-        const BYTE *pEndBuffer_;
-        BYTE *pBufferIndex_;
-        ULONG lastPropertyIndex_;
+        // Resolve a target property's offset+length by summing known lengths
+        // from the two caches, only invoking size_provider for dynamic
+        // properties whose per-event length isn't already resolved.
+        // No mutation of parser cursor state.
+        property_info resolve_offset(ULONG target);
 
-        // Per-event property offsets. Sized at construction to schema's
-        // PropertyCount. Fixed-prefix slots (indices < layout.fixed_count)
-        // stay default-npos — reads for those hit the shared layout cache.
-        // Tail slots (>= fixed_count) fill as the parser walks.
-        std::vector<property_info> perEventOffsets_;
+        // Per-event tail-offset storage. Sparse: only indices in the range
+        // [layout_fixed_snapshot_, PropertyCount) have slots. Access with
+        // offset_slot(global_index).
+        //   - If tail_count_ <= kInlineTail: inline storage on the parser
+        //     itself, zero heap allocation.
+        //   - Else: falls back to heap_offsets_.
+        // Callers must only invoke offset_slot() for indices past the fixed
+        // prefix snapshot; fixed-prefix reads hit layout.entries directly.
+        static constexpr size_t kInlineTail = 8;
+
+        inline property_info& offset_slot(ULONG global_i)
+        {
+            ULONG local = global_i - layout_fixed_snapshot_;
+            return (tail_count_ <= kInlineTail)
+                ? inline_offsets_[local]
+                : heap_offsets_[local];
+        }
+
+        inline const property_info& offset_slot(ULONG global_i) const
+        {
+            ULONG local = global_i - layout_fixed_snapshot_;
+            return (tail_count_ <= kInlineTail)
+                ? inline_offsets_[local]
+                : heap_offsets_[local];
+        }
+
+    private:
+        const schema& schema_;
+        const BYTE* pUserData_;      // base pointer for property_info::pointer_in()
+        const BYTE* pEndBuffer_;
+
+        // Snapshot of layout.fixed_count at parser construction. All indices
+        // >= snapshot land in offset_slot(); < snapshot is served directly
+        // from layout.entries.
+        ULONG layout_fixed_snapshot_;
+        ULONG tail_count_;
+
+        property_info              inline_offsets_[kInlineTail];
+        std::vector<property_info> heap_offsets_;   // used only if tail_count_ > kInlineTail
     };
 
     // Implementation
     // ------------------------------------------------------------------------
 
-    inline parser::parser(const schema &s)
-    : schema_(s)
-    , pUserData_((const BYTE*)s.record_.UserData)
-    , pEndBuffer_(pUserData_ + s.record_.UserDataLength)
-    , pBufferIndex_((BYTE*)s.record_.UserData)
-    , lastPropertyIndex_(0)
-    , perEventOffsets_(s.pSchema_->PropertyCount)
-    {}
+    inline parser::parser(const schema& s)
+        : schema_(s)
+        , pUserData_((const BYTE*)s.record_.UserData)
+        , pEndBuffer_(pUserData_ + s.record_.UserDataLength)
+        , layout_fixed_snapshot_(s.layout().fixed_count)
+        , tail_count_(s.pSchema_->PropertyCount > layout_fixed_snapshot_
+            ? s.pSchema_->PropertyCount - layout_fixed_snapshot_
+            : 0)
+    {
+        // Reset tail slots to default (all npos). Inline storage may hold
+        // stale values from a previous parser on this stack frame, so we must
+        // reinitialize the portion we'll use.
+        if (tail_count_ <= kInlineTail) {
+            for (ULONG i = 0; i < tail_count_; ++i) {
+                inline_offsets_[i] = property_info();
+            }
+        }
+        else {
+            heap_offsets_.assign(tail_count_, property_info{});
+        }
+    }
 
     inline property_iterator parser::properties() const
     {
         return property_iterator(schema_);
     }
 
-    inline property_info parser::find_property(const std::wstring &name)
+    // Compute the property_info for `target` by summing lengths from index 0
+    // upward. Uses the two caches to avoid re-doing work:
+    //   - fixed prefix: length_ from layout.entries[j].
+    //   - past prefix, schema-fixed length: length_ from layout.entries[j].
+    //   - past prefix, resolved this event: length_ from offset_slot(j).
+    //   - past prefix, dynamic + unresolved: one size_provider byte-scan.
+    // Populates offset_slot() for every property visited past the fixed
+    // prefix; populates layout.entries / fixed_count / name_index on first
+    // sight of the descriptor.
+    inline property_info parser::resolve_offset(ULONG target)
+    {
+        auto& layout = schema_.layout();
+        ULONG cursor = 0;
+
+        // Start from wherever the layout's fixed prefix ends. Fixed prefix
+        // offsets are already correct in layout.entries; we just need the
+        // running cursor to continue past them.
+        ULONG j = layout.fixed_count;
+        if (j > 0) cursor = layout.prefix_byte_end;
+
+        // The target itself may be in the fixed prefix — return directly.
+        if (target < layout.fixed_count) return layout.entries[target];
+
+        while (j <= target) {
+            auto& layout_entry = layout.entries[j];
+
+            ULONG len;
+            if (layout_entry.has_length()) {
+                // Fast path: schema-fixed length already cached. Nothing to write.
+                len = layout_entry.length_;
+
+                // Still need to check if this iteration extends the fixed prefix.
+                // (Could be schema-fixed but offset not yet cached — first-sight case.)
+                if (j == layout.fixed_count) {
+                    layout_entry.offset_ = cursor;
+                    layout.fixed_count = j + 1;
+                    layout.prefix_byte_end = cursor + len;
+                }
+                else if (j >= layout_fixed_snapshot_) {
+                    // Past our snapshot's fixed prefix. Cache per-event.
+                    offset_slot(j) = property_info(cursor, len, j);
+                }
+            }
+            else {
+                // Slow path: length not in layout. Either per-event cache or byte-scan.
+                auto& currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[j];
+
+                if (j >= layout_fixed_snapshot_ && offset_slot(j).found()) {
+                    len = offset_slot(j).length_;
+                }
+                else {
+                    const wchar_t* pName = reinterpret_cast<const wchar_t*>(
+                        reinterpret_cast<BYTE*>(schema_.pSchema_) + currentPropInfo.NameOffset);
+                    len = size_provider::get_property_size(
+                        pUserData_ + cursor, pName, schema_.record_, currentPropInfo);
+                }
+
+                if (pUserData_ + cursor + len > pEndBuffer_) {
+                    throw std::out_of_range("Property length past end of property buffer");
+                }
+
+                // Check for schema-fixed status only in this path (dynamic-or-first-sight
+                // property). If it turns out to be schema-fixed, cache the length.
+                const bool schema_fixed =
+                    (currentPropInfo.Flags & (PropertyParamLength | PropertyParamCount)) == 0
+                    && currentPropInfo.length > 0;
+
+                if (schema_fixed) {
+                    layout_entry.length_ = len;
+                    layout_entry.property_index_ = j;
+                    if (j == layout.fixed_count) {
+                        layout_entry.offset_ = cursor;
+                        layout.fixed_count = j + 1;
+                        layout.prefix_byte_end = cursor + len;
+                    }
+                }
+
+                // Per-event cache for anything past our snapshot's fixed prefix.
+                if (j >= layout_fixed_snapshot_) {
+                    offset_slot(j) = property_info(cursor, len, j);
+                }
+            }
+
+            if (j == target) return property_info(cursor, len, j);
+
+            // Name -> index cache. Only for slow-path visits where we may not have
+            // seen this index before. In fast-path we've been here before (length
+            // came from layout, which is populated only after a walk).
+            if (layout.name_index.size() <= j) {
+                auto& currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[j];
+                const wchar_t* pName = reinterpret_cast<const wchar_t*>(
+                    reinterpret_cast<BYTE*>(schema_.pSchema_) + currentPropInfo.NameOffset);
+                layout.name_index.push_back({ pName, j });
+            }
+
+            cursor += len;
+            ++j;
+        }
+
+        return property_info();
+    }
+
+    inline property_info parser::find_property(const std::wstring& name)
     {
         // A schema contains a collection of properties keyed by name. Property
         // bytes are stored in a blob that requires linear traversal because
         // variable-length properties have no on-wire offset. We minimize this
-        // via two caches:
-        //   - per-descriptor schema.layout(): schema-fixed offsets + lengths.
-        //   - per-event perEventOffsets_:     everything walked in this event.
+        // via three caches:
+        //   - per-descriptor layout.entries:    schema-fixed offsets + lengths.
+        //   - per-descriptor layout.name_index: name -> index resolutions.
+        //   - per-event offset_slot():          everything resolved in this event (tail only).
+        //
+        // Single pass: use cached name pointer when this index has been seen
+        // before, otherwise resolve from the schema and remember it. name_index
+        // grows monotonically from index 0, so a simple size() check partitions
+        // known indices from new ones with no gaps.
 
         auto& layout = schema_.layout();
         const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
 
-        assert((pBufferIndex_ <= pEndBuffer_ && pBufferIndex_ >= schema_.record_.UserData) &&
-               "invariant: we should've already thrown for falling off the edge");
-
-        // accept that last property can be omitted from buffer. this happens if last property
-        // is string but empty and the provider strips the null terminator
-        assert((pBufferIndex_ == pEndBuffer_ ? ((totalPropCount - lastPropertyIndex_) <= 1)
-                                             : true)
-               && "invariant: if we've exhausted our buffer, then we must've"
-                  "exhausted the properties as well");
-
-        for (auto &i = lastPropertyIndex_; i < totalPropCount; ++i) {
-
-            auto &currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[i];
-            const wchar_t *pName = reinterpret_cast<const wchar_t*>(
-                                        reinterpret_cast<BYTE*>(schema_.pSchema_) +
-                                        currentPropInfo.NameOffset);
-
-            // Length: use layout cache if schema-fixed and already resolved,
-            // otherwise consult size_provider (walks bytes for dynamic props).
-            ULONG propertyLength;
-            {
-                auto& cached = layout.entries[i];
-                if (cached.has_length()) {
-                    propertyLength = cached.length_;
-                } else {
-                    propertyLength = size_provider::get_property_size(
-                                        pBufferIndex_, pName,
-                                        schema_.record_, currentPropInfo);
-                }
+        for (ULONG i = 0; i < totalPropCount; ++i) {
+            const wchar_t* pName;
+            if (i < layout.name_index.size()) {
+                pName = layout.name_index[i].name;
+            }
+            else {
+                pName = reinterpret_cast<const wchar_t*>(
+                    reinterpret_cast<BYTE*>(schema_.pSchema_) +
+                    schema_.pSchema_->EventPropertyInfoArray[i].NameOffset);
+                layout.name_index.push_back({ pName, i });
             }
 
-            // verify that the length of the property doesn't exceed the buffer
-            if (pBufferIndex_ + propertyLength > pEndBuffer_) {
-                throw std::out_of_range("Property length past end of property buffer");
-            }
-
-            const ULONG offset = ULONG(pBufferIndex_ - pUserData_);
-            property_info propInfo(offset, propertyLength, i);
-
-            // Populate the per-descriptor layout:
-            //   - length: cache whenever the schema fixes it (same predicate
-            //     size_provider uses for its fixed-length short-circuit).
-            //   - offset: cache only while every prior property has fixed
-            //     length, i.e. i == layout.fixed_count.
-            const bool schema_fixed =
-                (currentPropInfo.Flags & (PropertyParamLength | PropertyParamCount)) == 0
-                && currentPropInfo.length > 0;
-
-            auto& cached = layout.entries[i];
-            if (schema_fixed && !cached.has_length()) {
-                cached.length_ = propertyLength;
-                cached.property_index_ = i;
-            }
-            if (i == layout.fixed_count && cached.has_length()) {
-                cached.offset_ = offset;
-                layout.fixed_count = i + 1;
-                layout.prefix_byte_end = offset + propertyLength;
-            }
-
-            // Per-event cache: only tail entries; fixed-prefix reads go
-            // straight to layout in find_property_at.
-            if (i >= layout.fixed_count) {
-                perEventOffsets_[i] = propInfo;
-            }
-
-            // advance the buffer index since we've already processed this property
-            pBufferIndex_ += propertyLength;
-
-            // The property was found, return it
             if (name == pName) {
-                // advance the index since we've already processed this property
-                ++i;
-                return propInfo;
+                return find_property_at(i);
             }
         }
-
-        // property wasn't found, return an empty propInfo
         return property_info();
     }
 
@@ -258,76 +351,21 @@ namespace krabs {
     {
         auto& layout = schema_.layout();
         const ULONG totalPropCount = schema_.pSchema_->PropertyCount;
-        if (index >= totalPropCount)
-            return property_info();
+        if (index >= totalPropCount) return property_info();
 
-        // Fast path 1: descriptor cache has full offset+length (fixed prefix).
-        if (index < layout.fixed_count) {
-            return layout.entries[index];
+        // Fast path 1: fully cached in layout (fixed prefix).
+        if (index < layout.fixed_count) return layout.entries[index];
+
+        // Fast path 2: already resolved for this event (tail only).
+        if (index >= layout_fixed_snapshot_ && offset_slot(index).found()) {
+            return offset_slot(index);
         }
 
-        // Fast path 2: this parser already walked past `index` in this event.
-        if (perEventOffsets_[index].found()) {
-            return perEventOffsets_[index];
-        }
-
-        // Slow path: walk from cursor to `index`, filling both caches.
-        for (auto& i = lastPropertyIndex_; i <= index && i < totalPropCount; ++i)
-        {
-            auto& currentPropInfo = schema_.pSchema_->EventPropertyInfoArray[i];
-            const wchar_t* pName = reinterpret_cast<const wchar_t*>(
-                reinterpret_cast<BYTE*>(schema_.pSchema_) +
-                currentPropInfo.NameOffset);
-
-            ULONG propertyLength;
-            {
-                auto& cached = layout.entries[i];
-                if (cached.has_length()) {
-                    propertyLength = cached.length_;
-                } else {
-                    propertyLength = size_provider::get_property_size(
-                        pBufferIndex_, pName, schema_.record_, currentPropInfo);
-                }
-            }
-
-            if (pBufferIndex_ + propertyLength > pEndBuffer_)
-                throw std::out_of_range("Property length past end of property buffer");
-
-            const ULONG offset = ULONG(pBufferIndex_ - pUserData_);
-            property_info propInfo(offset, propertyLength, i);
-
-            const bool schema_fixed =
-                (currentPropInfo.Flags & (PropertyParamLength | PropertyParamCount)) == 0
-                && currentPropInfo.length > 0;
-
-            auto& cached = layout.entries[i];
-            if (schema_fixed && !cached.has_length()) {
-                cached.length_ = propertyLength;
-                cached.property_index_ = i;
-            }
-            if (i == layout.fixed_count && cached.has_length()) {
-                cached.offset_ = offset;
-                layout.fixed_count = i + 1;
-                layout.prefix_byte_end = offset + propertyLength;
-            }
-
-            if (i >= layout.fixed_count) {
-                perEventOffsets_[i] = propInfo;
-            }
-
-            pBufferIndex_ += propertyLength;
-
-            if (i == index)
-            {
-                ++i;
-                return propInfo;
-            }
-        }
-
-        return property_info();
+        // Compute directly by summing known lengths.
+        return resolve_offset(index);
     }
 
-    inline void throw_if_property_not_found(const property_info &propInfo)
+    inline void throw_if_property_not_found(const property_info& propInfo)
     {
         if (!propInfo.found()) {
             throw std::runtime_error("Property with the given name does not exist");
@@ -340,7 +378,7 @@ namespace krabs {
         // for some string types the length includes the null terminator
         // so we need to find the length of just the content part
 
-        T nullChar {0};
+        T nullChar{ 0 };
         auto length = lengthBytes / sizeof(T);
 
         for (auto i = length; i >= 1; --i)
@@ -353,7 +391,7 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    bool parser::try_parse(const std::wstring &name, T &out, ULONG& index)
+    bool parser::try_parse(const std::wstring& name, T& out, ULONG& index)
     {
         try {
             out = parse<T>(name, index);
@@ -375,7 +413,7 @@ namespace krabs {
     }
 
     template <typename T>
-    bool parser::try_parse(const std::wstring &name, T &out)
+    bool parser::try_parse(const std::wstring& name, T& out)
     {
         ULONG index = npos;
         return try_parse<T>(name, out, index);
@@ -385,14 +423,14 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename T>
-    T parser::parse(const std::wstring &name)
+    T parser::parse(const std::wstring& name)
     {
         ULONG index = npos;
         return parse<T>(name, index);
     }
 
     template <typename T>
-    T parser::parse(const std::wstring &name, ULONG& index)
+    T parser::parse(const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -420,7 +458,7 @@ namespace krabs {
     }
 
     template <>
-    inline std::wstring parser::parse<std::wstring>(const std::wstring &name, ULONG& index)
+    inline std::wstring parser::parse<std::wstring>(const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -434,7 +472,7 @@ namespace krabs {
     }
 
     template <>
-    inline std::string parser::parse<std::string>(const std::wstring &name, ULONG& index)
+    inline std::string parser::parse<std::string>(const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -448,7 +486,7 @@ namespace krabs {
     }
 
     template<>
-    inline const counted_string* parser::parse<const counted_string*>(const std::wstring &name, ULONG& index)
+    inline const counted_string* parser::parse<const counted_string*>(const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -459,7 +497,7 @@ namespace krabs {
     }
 
     template<>
-    inline binary parser::parse<binary>(const std::wstring &name, ULONG& index)
+    inline binary parser::parse<binary>(const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -471,7 +509,7 @@ namespace krabs {
 
     template<>
     inline ip_address parser::parse<ip_address>(
-        const std::wstring &name, ULONG& index)
+        const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -494,7 +532,7 @@ namespace krabs {
 
     template<>
     inline socket_address parser::parse<socket_address>(
-        const std::wstring &name, ULONG& index)
+        const std::wstring& name, ULONG& index)
     {
         auto propInfo = resolve_property(name, index);
         throw_if_property_not_found(propInfo);
@@ -584,7 +622,7 @@ namespace krabs {
     // ------------------------------------------------------------------------
 
     template <typename Adapter>
-    auto parser::view_of(const std::wstring &name, Adapter &adapter)
+    auto parser::view_of(const std::wstring& name, Adapter& adapter)
         -> collection_view<typename Adapter::const_iterator>
     {
         auto propInfo = find_property(name);

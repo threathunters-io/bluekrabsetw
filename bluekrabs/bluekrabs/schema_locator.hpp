@@ -38,6 +38,13 @@ namespace krabs {
         uint8_t   version;
         uint8_t   level;
 
+        schema_key()
+            : provider(GUID{})
+            , id(0)
+            , opcode(0)
+            , version(0)
+            , level(0) {}
+
         schema_key(const EVENT_RECORD &record)
             : provider(record.EventHeader.ProviderId)
             , id(record.EventHeader.EventDescriptor.Id)
@@ -136,6 +143,12 @@ namespace krabs {
             std::unique_ptr<property_layout> layout;
         };
         mutable std::unordered_map<schema_key, entry> cache_;
+
+        // Last-hit cache. Consecutive ETW events on a session very often
+        // share a descriptor; a single key comparison dodges the hash+bucket
+        // walk on the map. Not thread-safe (matches locator invariants).
+        mutable schema_key last_key_;
+        mutable entry* last_entry_ = nullptr;
     };
 
     // Implementation
@@ -147,18 +160,30 @@ namespace krabs {
         property_layout*&   out_layout) const
     {
         // NOT thread-safe; see class-level remarks.
-        auto& e = cache_[schema_key(record)];
+        schema_key key(record);
 
-        if (!e.buffer) {
-            e.buffer = get_event_schema_from_tdh(record);
-            auto schema = (PTRACE_EVENT_INFO)(e.buffer.get());
-
-            e.layout = std::make_unique<property_layout>();
-            e.layout->entries.assign(schema->PropertyCount, property_info{});
+        entry* e;
+        if (last_entry_ && key == last_key_) {
+            // Fast path — same descriptor as previous event.
+            e = last_entry_;
+        }
+        else {
+            // Slow path — map lookup. Rebind the last-hit slot.
+            e = &cache_[key];
+            last_key_ = key;
+            last_entry_ = e;
         }
 
-        out_schema = (PTRACE_EVENT_INFO)(e.buffer.get());
-        out_layout = e.layout.get();
+        if (!e->buffer) {
+            e->buffer = get_event_schema_from_tdh(record);
+            auto schema = (PTRACE_EVENT_INFO)(e->buffer.get());
+
+            e->layout = std::make_unique<property_layout>();
+            e->layout->entries.assign(schema->PropertyCount, property_info{});
+        }
+
+        out_schema = (PTRACE_EVENT_INFO)(e->buffer.get());
+        out_layout = e->layout.get();
     }
 
     inline const PTRACE_EVENT_INFO schema_locator::get_event_schema(const EVENT_RECORD &record) const

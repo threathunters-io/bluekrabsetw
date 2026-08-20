@@ -270,6 +270,13 @@ namespace krabs {
         std::vector<property_info> entries;
         ULONG                      fixed_count;
         ULONG                      prefix_byte_end;
+    	
+    	// Name → index cache, lazily populated by parser::find_property.
+		// Names are stable pointers into the schema's TRACE_EVENT_INFO buffer.
+		// Small linear vector — typical schemas have <20 properties, so a linear
+		// scan of a 2-tuple vector is faster than a hash map.
+        struct name_slot { const wchar_t* name; ULONG index; };
+        std::vector<name_slot> name_index;
 
         property_layout()
             : fixed_count(0)
